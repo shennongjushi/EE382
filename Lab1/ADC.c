@@ -104,9 +104,8 @@ void WaitForInterrupt(void);  // low power mode
 // SS3 triggering event: Timer0A
 // SS3 1st sample source: programmable using variable 'channelNum' [0:11]
 // SS3 interrupts: enabled and promoted to controller
-void ADC_Init(unsigned int channelNum, unsigned int fs){
+void ADC_Init(unsigned int channelNum, unsigned int prescale, unsigned int period){
 	volatile uint32_t delay;
-	uint32_t period;
   // **** GPIO pin initialization ****
   switch(channelNum){             // 1) activate clock
     case 0:
@@ -206,15 +205,15 @@ void ADC_Init(unsigned int channelNum, unsigned int fs){
   SYSCTL_RCGCADC_R |= 0x01;     // activate ADC0 
   SYSCTL_RCGCTIMER_R |= 0x01;   // activate timer0 
   delay = SYSCTL_RCGCTIMER_R;   // allow time to finish activating
-  TIMER0_CTL_R = 0x00000000;    // disable timer0A during setup
-  TIMER0_CTL_R |= 0x00000020;   // enable timer0A trigger to ADC
-  TIMER0_CFG_R = 0;             // configure for 16-bit timer mode
-  TIMER0_TAMR_R = 0x00000002;   // configure for periodic mode, default down-count settings
-  TIMER0_TAPR_R = 0;            // prescale value for trigger
-	period = 50000000/fs;         //80MHz, period will be 80Mhz/fs
-  TIMER0_TAILR_R = period-1;    // start value for trigger
-  TIMER0_IMR_R = 0x00000000;    // disable all interrupts
-  TIMER0_CTL_R |= 0x00000001;   // enable timer0A 16-b, periodic, no interrupts
+  TIMER0_CTL_R &= ~TIMER_CTL_TAEN;          // disable timer0A during setup
+  TIMER0_CTL_R |= TIMER_CTL_TAOTE;          // enable timer0A trigger to ADC
+  TIMER0_CFG_R = TIMER_CFG_16_BIT;          // configure for 16-bit timer mode
+  // **** timer0A initialization ****
+  TIMER0_TAMR_R = TIMER_TAMR_TAMR_PERIOD;   // configure for periodic mode
+  TIMER0_TAPR_R = prescale;                 // prescale value for trigger
+  TIMER0_TAILR_R = period;                  // start value for trigger
+  TIMER0_IMR_R &= ~TIMER_IMR_TATOIM;        // disable timeout (rollover) interrupt
+  TIMER0_CTL_R |= TIMER_CTL_TAEN;           // enable timer0A 16-b, periodic, no interrupts
   ADC0_PC_R = 0x01;         // configure for 125K samples/sec
   ADC0_SSPRI_R = 0x3210;    // sequencer 0 is highest, sequencer 3 is lowest
   ADC0_ACTSS_R &= ~0x08;    // disable sample sequencer 3
@@ -227,46 +226,43 @@ void ADC_Init(unsigned int channelNum, unsigned int fs){
   NVIC_EN0_R = 1<<17;              // enable interrupt 17 in NVIC
   EnableInterrupts();
 }
-int ADC_Open(unsigned int channelNum){	
-	ADC_Init(channelNum,10);
-	return 1;
-}
-
 volatile unsigned short ADCvalue;
 volatile unsigned int n_samples;
 volatile unsigned short *buffer_adc=0; 
+volatile unsigned short ADC_ready=0;
+volatile unsigned short ADC_multiple = 0;
+
+int ADC_Open(unsigned int channelNum){	
+	ADC_Init(channelNum, 100, 5000);//sample at 100HZ
+	return 1;
+}
 
 void ADC0Seq3_Handler(void){
-  ADC0_ISC_R = 0x08;          // acknowledge ADC sequence 3 completion
-  ADCvalue = ADC0_SSFIFO3_R&0xFFF;  // 12-bit result
-	if(buffer_adc!=0){
+  ADC0_ISC_R = ADC_ISC_IN3;          // acknowledge ADC sequence 3 completion
+  ADCvalue = ADC0_SSFIFO3_R&ADC_SSFIFO3_DATA_M;  // 12-bit result
+	ADC_ready = 1;
+	if(ADC_multiple){
 		if(n_samples!=0){
 			n_samples--;
 			*buffer_adc = ADCvalue;
 			buffer_adc++;
+		}else{
+			ADC_multiple = 0;//finish
 		}
 	}
 }
+
 unsigned short ADC_In(void){
-	WaitForInterrupt();
+	ADC_ready = 0;
+	while(!ADC_ready){};
 	return ADCvalue;
 }
 
 int ADC_Collect(unsigned int channelNum, unsigned int fs, unsigned short buffer[], unsigned int numberOfSamples){
-	//int i;
-	//number of samples
-	/*ADC0_SAC_R &= 0xf8;//Initial last 3 bits(AVG) to 000;
-	switch(numberOfSamples){
-		case 0: break;                       // No hardware oversampling
-		case 2: ADC0_SAC_R |= 0x01;break;    // 2x
-		case 4: ADC0_SAC_R |= 0x02;break;    // 4x
-		case 8: ADC0_SAC_R |= 0x03;break;    // 8x
-		case 16: ADC0_SAC_R |= 0x04;break;   // 16x
-		case 32: ADC0_SAC_R |= 0x05;break;   // 32x
-		case 64: ADC0_SAC_R |= 0x06;break;   // 64x
-		default: break;
-	}*/
-	ADC_Init(channelNum,fs);
+	int prescale = 99;
+	int period = 500000/fs - 1;
+	ADC_multiple = 1;
+  ADC_Init(channelNum, prescale, period);
 	buffer_adc = buffer;
 	n_samples = numberOfSamples;
 	return 1;

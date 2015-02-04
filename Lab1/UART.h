@@ -109,6 +109,6 @@ void UART_OutUHex(uint32_t number);
 // -- Modified by Agustinus Darmawan + Mingjie Qiu --
 void UART_InString(char *bufPt, uint16_t max);
 
-int fputc(int ch, FILE *f);
+/*int fputc(int ch, FILE *f);
 int fgetc (FILE *f);
-int ferror(FILE*f);
+int ferror(FILE*f);*/

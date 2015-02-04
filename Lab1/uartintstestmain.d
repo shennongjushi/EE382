@@ -6,3 +6,5 @@
 .\uartintstestmain.o: C:\Keil\ARM\ARMCC\bin\..\include\stdio.h
 .\uartintstestmain.o: ADC.h
 .\uartintstestmain.o: ST7735.h
+.\uartintstestmain.o: OS.h
+.\uartintstestmain.o: ..\..\RTOS\inc/tm4c123gh6pm.h

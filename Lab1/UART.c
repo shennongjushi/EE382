@@ -317,7 +317,7 @@ char character;
 }
 
 /*redirect to UART*/
-int fputc(int ch, FILE *f){
+/*int fputc(int ch, FILE *f){
 		UART_OutChar(ch);
 		return (1);
 }
@@ -328,4 +328,4 @@ int fgetc (FILE *f){
 
 int ferror(FILE*f){
 		return EOF;
-}
+}*/
