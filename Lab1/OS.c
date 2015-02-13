@@ -26,12 +26,10 @@ int OS_AddPeriodicThread(void(*task)(void), unsigned long period, unsigned long 
   TIMER1_ICR_R = 0x00000001;    // 5) clear TIMER1A timeout flag
   TIMER1_IMR_R = 0x00000001;    // 6) arm timeout interrupt
 	
-  //??????????  
-	NVIC_PRI4_R = (NVIC_PRI4_R&0x00FFFFFF)|0x80000000; // 7) priority 4???????????
+	NVIC_PRI5_R = (NVIC_PRI4_R&0xFFFF00FF)|(priority<<13); // 7) priority
 // interrupts enabled in the main program after all devices initialized
-// vector number 35, interrupt number 19
-  NVIC_EN0_R = 1 << 21;           // 8) enable IRQ 19 in NVIC ??????????????
-	
+// vector number 35, interrupt number 21
+  NVIC_EN0_R = 1 << 21;           // 8) enable IRQ 21 in NVIC
   TIMER1_CTL_R = 0x00000001;    // 9) enable TIMER1A
   EndCritical(sr);
 	return 1;

@@ -3,7 +3,7 @@
 <title>Static Call Graph - [.\UARTInts.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image .\UARTInts.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5.03 [Build 76]: Last Updated: Wed Feb 04 11:22:24 2015
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5.03 [Build 76]: Last Updated: Fri Feb 13 11:59:05 2015
 <BR><P>
 <H3>Maximum Stack Usage =        176 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -889,7 +889,7 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[8f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[a4]"></a>OS_AddPeriodicThread</STRONG> (Thumb, 98 bytes, Stack size 24 bytes, os.o(i.OS_AddPeriodicThread))
+<P><STRONG><a name="[a4]"></a>OS_AddPeriodicThread</STRONG> (Thumb, 100 bytes, Stack size 24 bytes, os.o(i.OS_AddPeriodicThread))
 <BR><BR>[Stack]<UL><LI>Max Depth = 24 + Unknown Stack Size
 <LI>Call Chain = OS_AddPeriodicThread
 </UL>
@@ -949,7 +949,8 @@ Global Symbols
 <BR>[Calls]<UL><LI><a href="#[ae]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;writedata
 <LI><a href="#[ab]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;setAddrWindow
 </UL>
-<BR>[Called By]<UL><LI><a href="#[af]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ST7735_FillScreen
+<BR>[Called By]<UL><LI><a href="#[b5]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ST7735_Message
+<LI><a href="#[af]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ST7735_FillScreen
 </UL>
 
 <P><STRONG><a name="[af]"></a>ST7735_FillScreen</STRONG> (Thumb, 28 bytes, Stack size 16 bytes, st7735.o(i.ST7735_FillScreen))
@@ -974,10 +975,11 @@ Global Symbols
 <BR>[Called By]<UL><LI><a href="#[8f]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main
 </UL>
 
-<P><STRONG><a name="[b5]"></a>ST7735_Message</STRONG> (Thumb, 220 bytes, Stack size 56 bytes, st7735.o(i.ST7735_Message))
+<P><STRONG><a name="[b5]"></a>ST7735_Message</STRONG> (Thumb, 258 bytes, Stack size 56 bytes, st7735.o(i.ST7735_Message))
 <BR><BR>[Stack]<UL><LI>Max Depth = 136<LI>Call Chain = ST7735_Message &rArr; ST7735_DrawChar &rArr; setAddrWindow
 </UL>
-<BR>[Calls]<UL><LI><a href="#[aa]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ST7735_DrawChar
+<BR>[Calls]<UL><LI><a href="#[ad]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ST7735_FillRect
+<LI><a href="#[aa]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;ST7735_DrawChar
 </UL>
 <BR>[Called By]<UL><LI><a href="#[c4]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;interpreter
 </UL>
@@ -1078,7 +1080,7 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[93]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;__rt_exit_exit
 </UL>
 
-<P><STRONG><a name="[81]"></a>dummy</STRONG> (Thumb, 16 bytes, Stack size 0 bytes, uartintstestmain.o(i.dummy))
+<P><STRONG><a name="[81]"></a>dummy</STRONG> (Thumb, 2 bytes, Stack size 0 bytes, uartintstestmain.o(i.dummy))
 <BR>[Address Reference Count : 1]<UL><LI> uartintstestmain.o(i.interpreter)
 </UL>
 <P><STRONG><a name="[9b]"></a>ferror</STRONG> (Thumb, 8 bytes, Stack size 0 bytes, retarget.o(i.ferror))
@@ -1092,7 +1094,7 @@ Global Symbols
 </UL>
 <BR>[Address Reference Count : 1]<UL><LI> _printf_char_file.o(.text)
 </UL>
-<P><STRONG><a name="[c4]"></a>interpreter</STRONG> (Thumb, 316 bytes, Stack size 16 bytes, uartintstestmain.o(i.interpreter))
+<P><STRONG><a name="[c4]"></a>interpreter</STRONG> (Thumb, 334 bytes, Stack size 16 bytes, uartintstestmain.o(i.interpreter))
 <BR><BR>[Stack]<UL><LI>Max Depth = 152 + Unknown Stack Size
 <LI>Call Chain = interpreter &rArr; ST7735_Message &rArr; ST7735_DrawChar &rArr; setAddrWindow
 </UL>

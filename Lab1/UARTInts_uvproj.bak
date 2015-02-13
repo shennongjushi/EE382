@@ -445,6 +445,16 @@
               <FileType>5</FileType>
               <FilePath>.\ST7735.h</FilePath>
             </File>
+            <File>
+              <FileName>Retarget.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Retarget.c</FilePath>
+            </File>
+            <File>
+              <FileName>OS.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\OS.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

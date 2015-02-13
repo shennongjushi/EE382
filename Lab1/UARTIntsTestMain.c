@@ -78,7 +78,7 @@ void OutCRLF(void){
 }
 void dummy(void){
 	  //printf("dummy\r\n");
-	  GPIO_PORTF_DATA_R ^= 0x04;             // toggle LED
+	  //GPIO_PORTF_DATA_R ^= 0x04;             // toggle LED
 }
 void interpreter (char * command){
 	if(strcmp(command, "lcd") == 0){		
@@ -123,6 +123,9 @@ void interpreter (char * command){
 		 printf("Please enter the system timer period\r\n");
 		 timer_period  = UART_InUDec();
      OS_AddPeriodicThread(&dummy,timer_period,1);
+		 while(1){
+			 GPIO_PORTF_DATA_R ^= 0x04;
+		 }
 		 //printf("hello\r\n");
 	}
 }
@@ -137,10 +140,10 @@ int main(void){
   UART_Init();              // initialize UART
   while(1){
     printf("Pleast input the command\r\n");
-		//UART_OutString("hello");
     UART_InString(string,19);
     OutCRLF();
 		interpreter (string);
-		//OS_AddPeriodicThread(&dummy,1000,5);
+		//ST7735_Message (0, 0, "hello", 1);
+			
   }	
 }

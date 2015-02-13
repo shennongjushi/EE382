@@ -3,8 +3,8 @@
 <pre>
 <h1>µVision Build Log</h1>
 <h2>Project:</h2>
-E:\UT\RTOS\UARTInts_4C123\UARTInts.uvproj
-Project File Date:  02/03/2015
+E:\UT\RTOS\Lab1\UARTInts.uvproj
+Project File Date:  02/07/2015
 
 <h2>Output:</h2>
 Rebuild target 'UARTInts'
@@ -18,49 +18,14 @@ compiling Retarget.c...
 compiling OS.c...
 OS.c(17): warning:  #177-D: variable "PriorityHex" was declared but never referenced
         unsigned long PriorityHex;
-OS.c(53): warning:  #1-D: last line of file ends without a newline
-  }
-OS.c: 2 warnings, 0 errors
+OS.c: 1 warning, 0 errors
 linking...
-Program Size: Code=6764 RO-data=2052 RW-data=116 ZI-data=1372  
-".\UARTInts.axf" - 0 Error(s), 2 Warning(s).
-Load "E:\\UT\\RTOS\\UARTInts_4C123\\UARTInts.axf" 
-Connecting: Mode=JTAG, Speed=1000000Hz
-Erase Done.
-Programming Done.
-Verify OK.
-compiling UARTIntsTestMain.c...
-"UARTIntsTestMain.c" - 0 Error(s), 0 Warning(s).
-but never referenced
+Program Size: Code=6812 RO-data=2052 RW-data=116 ZI-data=1372  
+".\UARTInts.axf" - 0 Error(s), 1 Warning(s).
+</pre>
+</body>
+</html>
+): warning:  #177-D: variable "PriorityHex" was declared but never referenced
         unsigned long PriorityHex;
-OS.c(53): warning:  #1-D: last line of file ends without a newline
-  }
-OS.c: 2 warnings, 0 errors
-"OS.c" - 0 Error(s), 2 Warning(s).
- to assist in debugging
-UARTIntsTestMain.c: 1 warning, 0 errors
-"UARTIntsTestMain.c" - 0 Error(s), 1 Warning(s).
-error:  #117: non-void function "ADC_Init" should return a value
-      default: return;              //    0 to 11 are valid channels on the LM4F120
-ADC.c(205): warning:  #223-D: function "DisableInterrupts" declared implicitly
-        DisableInterrupts();
-ADC.c(228): warning:  #223-D: function "EnableInterrupts" declared implicitly
-    EnableInterrupts();
-ADC.c(251): warning:  #223-D: function "WaitForInterrupt" declared implicitly
-        WaitForInterrupt();
-ADC.c: 4 warnings, 4 errors
-"ADC.c" - 4 Error(s), 4 Warning(s).
-compiling ADC.c...
-ADC.h(6): warning:  #1-D: last line of file ends without a newline
-  ADC_Init(unsigned int channelNum, unsigned int prescale, unsigned int fs);
-ADC.h(6): error:  #260-D: explicit type is missing ("int" assumed)
-  ADC_Init(unsigned int channelNum, unsigned int prescale, unsigned int fs);
-ADC.c(107): error:  #147: declaration is incompatible with "int ADC_Init(unsigned int, unsigned int, unsigned int)" (declared at line 6 of "ADC.h")
-  void ADC_Init(unsigned int channelNum, unsigned int prescale, unsigned int fs){
-ADC.c: 1 warning, 2 errors
-"ADC.c" - 2 Error(s), 1 Warning(s).
-compiling ADC.c...
-ADC.h(6): warning:  #1-D: last line of file ends without a newline
-  void ADC_Init(unsigned int channelNum, unsigned int prescale, unsigned int fs);
-ADC.c: 1 warning, 0 errors
-"ADC.c" - 0 Error(s), 1 Warning(s).
+OS.c: 1 warning, 0 errors
+"OS.c" - 0 Error(s), 1 Warning(s).

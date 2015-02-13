@@ -1044,6 +1044,7 @@ void ST7735_Message (int device, int line, char * string, long value){
 	char values[12];
   int i = 0;
 	int j = 0;
+	ST7735_FillRect(0, line*10+device*80, 128, 10, ST7735_WHITE);//clear 
 	//String
 	while(*string){
 		ST7735_DrawChar(x*6, line*10+device*80, *string, ST7735_BLACK, ST7735_WHITE, 1);

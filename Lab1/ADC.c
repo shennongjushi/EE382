@@ -233,7 +233,7 @@ volatile unsigned short ADC_ready=0;
 volatile unsigned short ADC_multiple = 0;
 
 int ADC_Open(unsigned int channelNum){	
-	ADC_Init(channelNum, 100, 5000);//sample at 100HZ
+	ADC_Init(channelNum, 100, 8000);//sample at 100HZ
 	return 1;
 }
 
@@ -260,7 +260,7 @@ unsigned short ADC_In(void){
 
 int ADC_Collect(unsigned int channelNum, unsigned int fs, unsigned short buffer[], unsigned int numberOfSamples){
 	int prescale = 99;
-	int period = 500000/fs - 1;
+	int period = 800000/fs - 1;
 	ADC_multiple = 1;
   ADC_Init(channelNum, prescale, period);
 	buffer_adc = buffer;
