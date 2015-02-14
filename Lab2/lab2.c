@@ -27,6 +27,7 @@
 #include "inc/tm4c123gh6pm.h"
 #include "ST7735.h"
 #include "ADC.h"
+#include "ADC_SW.h"
 #include "UART.h"
 #include "PLL.h"
 #include <string.h> 
@@ -115,8 +116,10 @@ unsigned long thisTime;         // time at current ADC sample
 long jitter;                    // time between measured and expected, in us
   if(NumSamples < RUNLENGTH){   // finite time run
     PE0 ^= 0x01;
+		//GPIO_PORTF_DATA_R ^= 0x04; 
     input = ADC_In();           // channel set when calling ADC_Init
     PE0 ^= 0x01;
+		//GPIO_PORTF_DATA_R ^= 0x04; 
     thisTime = OS_Time();       // current time, 12.5 ns
     DASoutput = Filter(input);
     FilterWork++;        // calculation finished
@@ -137,6 +140,7 @@ long jitter;                    // time between measured and expected, in us
     }
     LastTime = thisTime;
     PE0 ^= 0x01;
+		//GPIO_PORTF_DATA_R ^= 0x04; 
   }
 }
 //--------------end of Task 1-----------------------------
@@ -225,7 +229,6 @@ unsigned long data,DCcomponent;   // 12-bit raw ADC sample, 0 to 4095
 unsigned long t;                  // time in 2.5 ms
 unsigned long myId = OS_Id(); 
   ADC_Collect(5, FS, &Producer); // start ADC sampling, channel 5, PD2, 400 Hz
-	//ADC_Collect(0,1000,buffer2,1);
   NumCreated += OS_AddThread(&Display,128,0); 
   while(NumSamples < RUNLENGTH) { 
     PE2 = 0x04;
@@ -316,7 +319,7 @@ void Interpreter(void){
 //--------------end of Task 5-----------------------------
 void OS_DisableInterrupts(void); // Disable interrupts
 //*******************final user main DEMONTRATE THIS TO TA**********
-int main0(void){ 
+int main(void){ 
   OS_Init();           // initialize, disable interrupts
 	PortE_Init();
 	GPIO_Init();
@@ -331,22 +334,19 @@ int main0(void){
   OS_Fifo_Init(128);    // ***note*** 4 is not big enough*****
 
 
-  //ST7735_Message(0,1,"Run length = ",1);
 //*******attach background tasks***********
     OS_AddSW1Task(&SW1Push,2);
     //OS_AddSW2Task(&SW2Push,2);  // add this line in Lab 3
-    //ADC_Init(4);  // sequencer 3, channel 4, PD3, sampling in DAS()
-    //OS_AddPeriodicThread(&DAS,PERIOD,1); // 2 kHz real time sampling of PD3
-    //OS_AddPeriodicThread(&SW1Push,50000000,1);
+    ADC_Init(4);  // sequencer 2, channel 4, PD3, sampling in DAS() 
+    OS_AddPeriodicThread(&DAS,PERIOD,1); // 2 kHz real time sampling of PD3
     NumCreated = 0 ;
 	
 // create initial foreground threads
-    //NumCreated += OS_AddThread(&Interpreter,128,2); 
+    NumCreated += OS_AddThread(&Interpreter,128,2); 
     NumCreated += OS_AddThread(&Consumer,128,1); 
     NumCreated += OS_AddThread(&PID,128,3);  // Lab 3, make this lowest priority
  
     OS_Launch(TIME_2MS); // doesn't return, interrupts enabled in here
-	  //OS_Launch(80000000);
   return 0;            // this never executes
 }
 
@@ -445,8 +445,8 @@ void Thread3b(void){
     Count3++;
   }
 }
-int main(void){
-//int Testmain2(void){  // Testmain2
+//int main(void){
+int Testmain2(void){  // Testmain2
   OS_Init();           // initialize, disable interrupts
   PortE_Init();       // profile user threads
   NumCreated = 0 ;

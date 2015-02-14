@@ -234,11 +234,11 @@ volatile unsigned short *buffer_adc=0;
 volatile unsigned short ADC_ready=0;
 volatile unsigned short ADC_multiple = 0;
 
-unsigned short ADC_In(void){
+/*unsigned short ADC_In(void){
 	ADC_ready = 0;
 	while(!ADC_ready){};
 	return ADCvalue;
-}
+}*/
 
 void(*ADC_Task)(unsigned long data);
 int ADC_Collect(unsigned int channelNum, unsigned int fs, void(*task)(unsigned long data)){
