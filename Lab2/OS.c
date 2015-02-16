@@ -30,6 +30,8 @@ void (*PeriodicTask)(void); // user function
 long static Fifo[FIFOSIZE];
 long volatile *PutPt;
 long volatile *GetPt;
+unsigned long global_period = 0;//for os_time_ms
+unsigned int flag = 0;//for os_time_ms
 struct tcb{
   int32_t *sp;       // pointer to stack (valid for threads not running
   struct tcb *next;  // linked-list pointer
@@ -55,6 +57,10 @@ unsigned long MailBox;
 int OS_AddPeriodicThread(void(*task)(void), unsigned long period, unsigned long priority) {
 	long sr;
   sr = StartCritical(); 
+	if(flag == 0){
+		global_period = period;
+		flag = 1;
+	}
   SYSCTL_RCGCTIMER_R |= 0x02;   // 0) activate TIMER1
   PeriodicTask = task;          // user function
   TIMER1_CTL_R = 0x00000000;    // 1) disable TIMER1A during setup
@@ -585,6 +591,7 @@ void OS_ClearMsTime(void){
 // You are free to select the time resolution for this function
 // It is ok to make the resolution to match the first call to OS_AddPeriodicThread
 unsigned long OS_MsTime(void){
-	return TIMER1_TAV_R;
+	return TIMER1_TAV_R*global_period/80000;
+	//return timer_value;
 }
 

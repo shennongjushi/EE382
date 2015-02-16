@@ -116,10 +116,8 @@ unsigned long thisTime;         // time at current ADC sample
 long jitter;                    // time between measured and expected, in us
   if(NumSamples < RUNLENGTH){   // finite time run
     PE0 ^= 0x01;
-		//GPIO_PORTF_DATA_R ^= 0x04; 
     input = ADC_In();           // channel set when calling ADC_Init
     PE0 ^= 0x01;
-		//GPIO_PORTF_DATA_R ^= 0x04; 
     thisTime = OS_Time();       // current time, 12.5 ns
     DASoutput = Filter(input);
     FilterWork++;        // calculation finished
@@ -140,7 +138,6 @@ long jitter;                    // time between measured and expected, in us
     }
     LastTime = thisTime;
     PE0 ^= 0x01;
-		//GPIO_PORTF_DATA_R ^= 0x04; 
   }
 }
 //--------------end of Task 1-----------------------------
@@ -168,14 +165,15 @@ unsigned long myId = OS_Id();
 // Adds another foreground task
 // background threads execute once and return
 void SW1Push(void){
-  //if(OS_MsTime() > 20){ // debounce
-  //  if(OS_AddThread(&ButtonWork,100,4)){
-  //    NumCreated++; 
-//			GPIO_PORTF_DATA_R ^= 0x04;              // turn off LED
- //   }
-		GPIO_PORTF_DATA_R ^= 0x04;              // turn off LED
-    //OS_ClearMsTime();  // at least 20ms between touches
-  //}
+	int t;
+	t = OS_MsTime();
+  if(t > 20){ // debounce
+		printf("time is %d\r\n",t);
+    if(OS_AddThread(&ButtonWork,100,4)){
+      NumCreated++;
+    }
+    OS_ClearMsTime();  // at least 20ms between touches
+  }
 }
 //************SW2Push*************
 // Called when SW2 Button pushed, Lab 3 only
@@ -208,7 +206,6 @@ void SW2Push(void){
 // sends data to the consumer, runs periodically at 400Hz
 // inputs:  none
 // outputs: none
-
 void Producer(unsigned long data){  
   if(NumSamples < RUNLENGTH){   // finite time run
     NumSamples++;               // number of samples
@@ -217,13 +214,13 @@ void Producer(unsigned long data){
     } 
   } 
 }
-void Display(void);
+void Display(void); 
+
 //******** Consumer *************** 
 // foreground thread, accepts data from producer
 // calculates FFT, sends DC component to Display
 // inputs:  none
 // outputs: none
-unsigned short buffer2[100];
 void Consumer(void){ 
 unsigned long data,DCcomponent;   // 12-bit raw ADC sample, 0 to 4095
 unsigned long t;                  // time in 2.5 ms
@@ -251,7 +248,6 @@ unsigned long myId = OS_Id();
 void Display(void){ 
 unsigned long data,voltage;
   ST7735_Message(0,1,"Run length = ",(RUNLENGTH)/FS);   // top half used for Display
-	//ST7735_Message(0,1,"Run length = ",1);
   while(NumSamples < RUNLENGTH) { 
     data = OS_MailBox_Recv();
     voltage = 3000*data/4095;               // calibrate your device so voltage is in mV
@@ -308,7 +304,7 @@ unsigned long myId = OS_Id();
 // inputs:  none
 // outputs: none
 void Interpreter(void){
-}    // just a prototype, link to your interpreter
+};    // just a prototype, link to your interpreter
 // add the following commands, leave other commands, if they make sense
 // 1) print performance measures 
 //    time-jitter, number of data points lost, number of calculations performed
@@ -317,7 +313,8 @@ void Interpreter(void){
 // 2) print debugging parameters 
 //    i.e., x[], y[] 
 //--------------end of Task 5-----------------------------
-void OS_DisableInterrupts(void); // Disable interrupts
+
+
 //*******************final user main DEMONTRATE THIS TO TA**********
 int main(void){ 
   OS_Init();           // initialize, disable interrupts
@@ -329,27 +326,24 @@ int main(void){
   MaxJitter = 0;       // in 1us units
 
 //********initialize communication channels
-	
   OS_MailBox_Init();
   OS_Fifo_Init(128);    // ***note*** 4 is not big enough*****
 
-
 //*******attach background tasks***********
-    OS_AddSW1Task(&SW1Push,2);
-    //OS_AddSW2Task(&SW2Push,2);  // add this line in Lab 3
-    ADC_Init(4);  // sequencer 2, channel 4, PD3, sampling in DAS() 
-    OS_AddPeriodicThread(&DAS,PERIOD,1); // 2 kHz real time sampling of PD3
-    NumCreated = 0 ;
-	
+  OS_AddSW1Task(&SW1Push,2);
+//  OS_AddSW2Task(&SW2Push,2);  // add this line in Lab 3
+  ADC_Init(4);  // sequencer 3, channel 4, PD3, sampling in DAS()
+  OS_AddPeriodicThread(&DAS,PERIOD,1); // 2 kHz real time sampling of PD3
+
+  NumCreated = 0 ;
 // create initial foreground threads
-    NumCreated += OS_AddThread(&Interpreter,128,2); 
-    NumCreated += OS_AddThread(&Consumer,128,1); 
-    NumCreated += OS_AddThread(&PID,128,3);  // Lab 3, make this lowest priority
+  NumCreated += OS_AddThread(&Interpreter,128,2); 
+  NumCreated += OS_AddThread(&Consumer,128,1); 
+  NumCreated += OS_AddThread(&PID,128,3);  // Lab 3, make this lowest priority
  
-    OS_Launch(TIME_2MS); // doesn't return, interrupts enabled in here
+  OS_Launch(TIME_2MS); // doesn't return, interrupts enabled in here
   return 0;            // this never executes
 }
-
 
 //+++++++++++++++++++++++++DEBUGGING CODE++++++++++++++++++++++++
 // ONCE YOUR RTOS WORKS YOU CAN COMMENT OUT THE REMAINING CODE
@@ -369,38 +363,30 @@ unsigned long Count3;   // number of times thread3 loops
 unsigned long Count4;   // number of times thread4 loops
 unsigned long Count5;   // number of times thread5 loops
 void Thread1(void){
-	
   Count1 = 0;          
   for(;;){
-		//printf("1\r\n");
-    PE1 ^= 0x02;       // heartbeat
+    PE0 ^= 0x01;       // heartbeat
     Count1++;
     OS_Suspend();      // cooperative multitasking
   }
 }
 void Thread2(void){
-	
   Count2 = 0;          
   for(;;){
-		//printf("22\r\n");
-    PE2 ^= 0x04;       // heartbeat
+    PE1 ^= 0x02;       // heartbeat
     Count2++;
     OS_Suspend();      // cooperative multitasking
   }
 }
 void Thread3(void){
-	
   Count3 = 0;          
   for(;;){
-		//printf("333\r\n");
-    PE3 ^= 0x08;       // heartbeat
+    PE2 ^= 0x04;       // heartbeat
     Count3++;
     OS_Suspend();      // cooperative multitasking
   }
 }
 
-//Testmain1
-//int main(void){
 int Testmain1(void){  // Testmain1
   OS_Init();          // initialize, disable interrupts
   PortE_Init();       // profile user threads
@@ -424,28 +410,24 @@ int Testmain1(void){  // Testmain1
 void Thread1b(void){
   Count1 = 0;          
   for(;;){
-		//printf("1\r\n");
-    PE1 ^= 0x02;       // heartbeat
+    PE0 ^= 0x01;       // heartbeat
     Count1++;
   }
 }
 void Thread2b(void){
   Count2 = 0;          
   for(;;){
-		//printf("22\r\n");
-    PE2 ^= 0x04;       // heartbeat
+    PE1 ^= 0x02;       // heartbeat
     Count2++;
   }
 }
 void Thread3b(void){
   Count3 = 0;          
   for(;;){
-		//printf("333\r\n");
-    PE3 ^= 0x08;       // heartbeat
+    PE2 ^= 0x04;       // heartbeat
     Count3++;
   }
 }
-//int main(void){
 int Testmain2(void){  // Testmain2
   OS_Init();           // initialize, disable interrupts
   PortE_Init();       // profile user threads
@@ -457,7 +439,6 @@ int Testmain2(void){  // Testmain2
   // counts are larger than testmain1
  
   OS_Launch(TIME_2MS); // doesn't return, interrupts enabled in here
-	//OS_Launch(1000000);
   return 0;            // this never executes
 }
 
@@ -473,31 +454,23 @@ Sema4Type Readyc;        // set in background
 int Lost;
 void BackgroundThread1c(void){   // called at 1000 Hz
   Count1++;
-	//GPIO_PORTF_DATA_R ^= 0x04;              // turn off LED
-	//printf("b1b1b1b1b1b1b1\r\n");
   OS_Signal(&Readyc);
 }
 void Thread5c(void){
-	int num;
   for(;;){
-		num = NumCreated;
-		//printf("5\r\n");
     OS_Wait(&Readyc);
     Count5++;   // Count2 + Count5 should equal Count1 
     Lost = Count1-Count5-Count2;
   }
 }
 void Thread2c(void){
-	//GPIO_PORTF_DATA_R ^= 0x04;   
   OS_InitSemaphore(&Readyc,0);
   Count1 = 0;    // number of times signal is called      
   Count2 = 0;    
   Count5 = 0;    // Count2 + Count5 should equal Count1  
   NumCreated += OS_AddThread(&Thread5c,128,3); 
   OS_AddPeriodicThread(&BackgroundThread1c,TIME_1MS,0); 
-	//OS_AddPeriodicThread(&BackgroundThread1c,10000000,0);
   for(;;){
-		//printf("2\r\n");
     OS_Wait(&Readyc);
     Count2++;   // Count2 + Count5 should equal Count1
   }
@@ -506,13 +479,10 @@ void Thread2c(void){
 void Thread3c(void){
   Count3 = 0;          
   for(;;){
-		//printf("3\r\n");
     Count3++;
   }
 }
-void Thread4c(void){	
-	int i;
-	printf("4444\t\n");
+void Thread4c(void){ int i;
   for(i=0;i<64;i++){
     Count4++;
     OS_Sleep(10);
@@ -521,20 +491,14 @@ void Thread4c(void){
   Count4 = 0;
 }
 void BackgroundThread5c(void){   // called when Select button pushed
-	GPIO_PORTF_DATA_R ^= 0x04;              // turn off LED
   NumCreated += OS_AddThread(&Thread4c,128,3); 
 }
-//int main(void){  
+      
 int Testmain3(void){   // Testmain3
   Count4 = 0;          
   OS_Init();           // initialize, disable interrupts
-	PortE_Init();
-	UART_Init();
-	GPIO_Init();
-	//UART_Init();
 // Count2 + Count5 should equal Count1
   NumCreated = 0 ;
-	//OS_AddPeriodicThread(&BackgroundThread1c,80000000,0); 
   OS_AddSW1Task(&BackgroundThread5c,2);
   NumCreated += OS_AddThread(&Thread2c,128,2); 
   NumCreated += OS_AddThread(&Thread3c,128,3); 
@@ -564,7 +528,6 @@ static int i=0;
     i = 0;         //every 50 ms
     Count1++;
     OS_bSignal(&Readyd);
-		//GPIO_PORTF_DATA_R ^= 0x04;              // turn off LED
   }
 }
 void Thread2d(void){
@@ -590,14 +553,11 @@ void Thread4d(void){ int i;
   OS_Kill();
 }
 void BackgroundThread5d(void){   // called when Select button pushed
-	GPIO_PORTF_DATA_R ^= 0x04;              // turn off LED
   NumCreated += OS_AddThread(&Thread4d,128,3); 
 }
-//int main(void){
 int Testmain4(void){   // Testmain4
   Count4 = 0;          
   OS_Init();           // initialize, disable interrupts
-	GPIO_Init();
   NumCreated = 0 ;
   OS_AddPeriodicThread(&BackgroundThread1d,PERIOD,0); 
   OS_AddSW1Task(&BackgroundThread5d,2);
@@ -638,8 +598,7 @@ void Thread6(void){  // foreground thread
     PE0 ^= 0x01;        // debugging toggle bit 0  
   }
 }
-extern void Jitter(void){
-}   // prints jitter information (write this)
+extern void Jitter(void){}   // prints jitter information (write this)
 void Thread7(void){  // foreground thread
   UART_OutString("\n\rEE345M/EE380L, Lab 3 Preparation 2\n\r");
   OS_Sleep(5000);   // 10 seconds        
@@ -800,28 +759,3 @@ int Testmain7(void){       // Testmain7
   OS_Launch(TIME_1MS/10); // 100us, doesn't return, interrupts enabled in here
   return 0;             // this never executes
 }
-
-unsigned short buffer[100];
-int main3(void){
-  char string[20];  // global to assist in debugging
-  PLL_Init();               // set system clock to 50 MHz
-	GPIO_Init();
-	ST7735_InitR(INITR_REDTAB); // initialize LCD
-	ST7735_FillScreen(0xFFFF); // set screen to white
-	PortE_Init();
-  UART_Init();              // initialize UART
-  while(1){
-    /*printf("Pleast input the command\r\n");
-    UART_InString(string,19);
-    OutCRLF();
-		interpreter (string);*/
-//		ADC_Collect(0,1000,buffer,1);
-	//	  while(ADC_Status()){};
-			//printf("-----ADC Result -----\r\n");
-		//ST7735_InitR(INITR_REDTAB); // initialize LCD
-	  //ST7735_FillScreen(0xFFFF); // set screen to white
-		ST7735_Message(0,1,"Run length = ",1);   // top half used for Display
-			
-  }	
-}
-
