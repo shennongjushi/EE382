@@ -24,7 +24,7 @@ void EndCritical(long sr);    // restore I bit to previous value
 void WaitForInterrupt(void);  // low power mode
 void (*PeriodicTask)(void); // user function
 
-#define FIFOSIZE 128
+#define FIFOSIZE 4
 #define NUMTHREADS  10        // maximum number of threads
 #define STACKSIZE   100      // number of 32-bit words in stack
 long static Fifo[FIFOSIZE];
@@ -35,14 +35,15 @@ unsigned int flag = 0;//for os_time_ms
 struct tcb{
   int32_t *sp;       // pointer to stack (valid for threads not running
   struct tcb *next;  // linked-list pointer
-	int id;	 // a unique identifier for the thread, used for debugging
 	unsigned int sleep; // used to suspend execution
+	int id;	 // a unique identifier for the thread, used for debugging
+	unsigned int valid; //used to indicate if it's valid or not
 	unsigned int priority;  //used in Lab3
 	unsigned int blocked;   //used in Lab3
 };
 typedef struct tcb tcbType;
 tcbType tcbs[NUMTHREADS];
-char valid[NUMTHREADS];
+//char valid[NUMTHREADS];
 tcbType *RunPt;
 //tcbType *head = NULL;
 tcbType *tail = NULL;
@@ -51,6 +52,8 @@ int j;
 Sema4Type DataRoomLeft,  mutex, DataAvailable;//for background <==> foreground communication between fifo
 Sema4Type DataValid, BoxFree;
 unsigned long MailBox;
+unsigned long timer_value_ms;
+unsigned long timer1_count = 0;
 //unsigned int thread_number;
 
 
@@ -82,11 +85,42 @@ int OS_AddPeriodicThread(void(*task)(void), unsigned long period, unsigned long 
 }
 
 void Timer1A_Handler(void) {
+	timer1_count++;
 	TIMER1_ICR_R = 0x00000001;	// clear TIMER1A timeout flag
 	(*PeriodicTask)(); 					// execute user function
 }
 
 
+// ******** Timer 2A ***********
+void Timer2A_Init(void){
+	long sr = StartCritical(); 
+  SYSCTL_RCGCTIMER_R |= 0x04;  // 0) activate timer2
+  TIMER2_CTL_R &= ~0x00000001;     // 1) disable timer2A during setup
+  TIMER2_CFG_R = 0x00000000;       // 2) configure for 32-bit timer mode
+  TIMER2_TAMR_R = 0x00000002;      // 3) configure for periodic mode, default down-up settings
+  TIMER2_TAILR_R = 80000-1;       // 4) reload value   /1ms
+  TIMER2_ICR_R = 0x00000001;       // 6) clear timer1A timeout flag
+  TIMER2_IMR_R |= 0x00000001;      // 7) arm timeout interrupt
+  NVIC_PRI5_R = (NVIC_PRI5_R&0x1fffffff)|(1<<29); // 8) priority
+  NVIC_EN0_R = 0x00800000;     // 9) enable interrupt 23 in NVIC
+  TIMER2_CTL_R |= 0x00000001;      // 10) enable timer2A
+	EndCritical(sr);
+}
+
+// Timer 2A handler
+void Timer2A_Handler(void){
+	 tcbType *pt = RunPt->next;
+	 TIMER2_ICR_R = TIMER_ICR_TATOCINT;// acknowledge timer1A timeout
+	 timer_value_ms++;
+	 while (pt!= RunPt){
+		 if (!RunPt)
+			 break;
+		 if ((pt->sleep>0)&&(pt->valid == 1))
+			 pt->sleep --;
+		 pt = pt->next;
+	 }
+}
+// ******** Timer 2A ***********
 
 // ******** OS_Init ************
 // initialize operating system, disable interrupts until OS_Launch
@@ -103,8 +137,9 @@ void OS_Init(void){
   NVIC_ST_CURRENT_R = 0;      // any write to current clears it
   NVIC_SYS_PRI3_R =(NVIC_SYS_PRI3_R&0x00FFFFFF)|0xE0000000; // systick priority 7
 	NVIC_SYS_PRI3_R = (NVIC_SYS_PRI3_R & 0xFF1FFFFF)|(7<<21); // pendsv priority 7
+	Timer2A_Init();//Timer2A_Init for 1ms
 	for(j = 0; j< NUMTHREADS; j++){
-		valid[j] = 0;
+		tcbs[j].valid = 0;
 		tcbs[j].id = -1;
 	}
 	//thread_number = 0;
@@ -143,8 +178,8 @@ int OS_AddThread(void(*task)(void), unsigned long stackSize, unsigned long prior
 { int32_t status;
   status = StartCritical();
 	for(j = 0; j < NUMTHREADS; j++){//find the position for the new task
-		if(valid[j] == 0){
-			valid[j] = 1;
+		if(tcbs[j].valid == 0){
+			tcbs[j].valid = 1;
 			break;
 		}
 	}
@@ -291,11 +326,13 @@ unsigned long OS_Id(void){
 // In lab 3, there will be up to four background threads, and this priority field 
 //           determines the relative priority of these four threads
 #define PF4 (*((volatile unsigned long *)0x40025040))
-unsigned long static LastPF4;
+unsigned long static LastPF4 = 1;
 void (*PF4Task)(void);
 int OS_AddSW1Task(void(*task)(void), unsigned long priority){
 	volatile unsigned long delay;
 	//SYSCTL_RCGC2_R |= 0x00000020;//activate clock for Port F
+	SYSCTL_RCGCGPIO_R |= 0x20;
+  delay = SYSCTL_RCGCGPIO_R;
 	//delay = SYSCTL_RCGC2_R; 		 //allow time for clock to start
 	//delay = SYSCTL_RCGC2_R; 		 //allow time for clock to start
 	//delay = SYSCTL_RCGC2_R; 		 //allow time for clock to start
@@ -306,8 +343,9 @@ int OS_AddSW1Task(void(*task)(void), unsigned long priority){
 	GPIO_PORTF_PUR_R |= 0x10; //pull-up on PF4
 	GPIO_PORTF_DEN_R |= 0x10; //enable difital I/O on PF4
 	GPIO_PORTF_IS_R &= ~0x10; //PF4 is edge-sensitive
-	GPIO_PORTF_IBE_R &= ~0x10; //PF4 is not both edges
-	GPIO_PORTF_IEV_R &= ~0x10;    //     PF4 falling edge event
+	//GPIO_PORTF_IBE_R &= ~0x10; //PF4 is not both edges
+	//GPIO_PORTF_IEV_R &= ~0x10;    //     PF4 falling edge event
+	GPIO_PORTF_IBE_R |= 0x10; //PF4 is both edges
 	GPIO_PORTF_ICR_R = 0x10; //clear flag4
 	GPIO_PORTF_IM_R |= 0x10; //enable interrupt on PF4
 	LastPF4 = PF4;
@@ -316,12 +354,16 @@ int OS_AddSW1Task(void(*task)(void), unsigned long priority){
 	PF4Task = task;
 	return 1;
 }
+#define PE1  (*((volatile unsigned long *)0x40024008))
 void static DebounceTaskPF4(void){
-	OS_Sleep(5);
+	//PE1 ^= 0x2;
+	OS_Sleep(50);
+	//PE1 ^= 0x2;
 	LastPF4 = PF4;
 	GPIO_PORTF_ICR_R = 0x10; //clear flag4
 	GPIO_PORTF_IM_R |= 0x10; //enable interrupt on PF4
 	OS_Kill();
+	//PE1 ^= 0x2;
 }
 
 
@@ -343,9 +385,13 @@ unsigned long static LastPF0;
 void (*PF0Task)(void);
 int OS_AddSW2Task(void(*task)(void), unsigned long priority){
 	volatile unsigned long delay;
-	SYSCTL_RCGC2_R |= 0x00000001;//activate clock for Port F
+	SYSCTL_RCGCGPIO_R |= 0x20;
+  delay = SYSCTL_RCGCGPIO_R;  
+	///SYSCTL_RCGC2_R |= 0x00000001;//activate clock for Port F
+	//SYSCTL_RCGCGPIO_R |= 0x1;
 	GPIO_PORTF_CR_R = 0x1F; // allow changes
-	delay = SYSCTL_RCGC2_R; 		 //allow time for clock to start
+	//delay = SYSCTL_RCGCGPIO_R;
+	///delay = SYSCTL_RCGC2_R; 		 //allow time for clock to start
 	GPIO_PORTF_LOCK_R = 0x4C4F434B; // unlock GPIO Port F 
   GPIO_PORTF_AMSEL_R &= ~0x01; //disable analog on PF0
 	GPIO_PORTF_PCTL_R &= ~0x0000000f; //PCTL GPIO on PF0
@@ -354,7 +400,8 @@ int OS_AddSW2Task(void(*task)(void), unsigned long priority){
 	GPIO_PORTF_PUR_R |= 0x01; //pull-up on PF0
 	GPIO_PORTF_DEN_R |= 0x01; //enable difital I/O on PF0
 	GPIO_PORTF_IS_R &= ~0x01; //PF0 is edge-sensitive
-	GPIO_PORTF_IBE_R &= ~0x01; //PF0 is not both edges
+	//GPIO_PORTF_IBE_R &= ~0x01; //PF0 is not both edges
+	GPIO_PORTF_IBE_R |= 0x01; //PF0 is both edges
 	GPIO_PORTF_ICR_R = 0x01; //clear flag0
 	GPIO_PORTF_IM_R |= 0x01; //enable interrupt on PF0
 	LastPF0 = PF0;
@@ -365,7 +412,7 @@ int OS_AddSW2Task(void(*task)(void), unsigned long priority){
 }
 
 void static DebounceTaskPF0(void){
-	OS_Sleep(10);
+	OS_Sleep(50);
 	LastPF0 = PF0;
 	GPIO_PORTF_ICR_R = 0x01; //clear flag0
 	GPIO_PORTF_IM_R |= 0x01; //enable interrupt on PF0
@@ -377,12 +424,16 @@ void static DebounceTaskPF0(void){
 // Inputs: pointer to a void/void background function
 
 void GPIOPortF_Handler(void){
+	//PE1 ^= 0x2;
 	if(((GPIO_PORTF_RIS_R>>4)&0x01)&&((GPIO_PORTF_MIS_R>>4)&0x01)){//PF4
+		// ack
 		if(LastPF4 == 0){//rise edge
 			(*PF4Task)();
 		}
+		//PE1 ^= 0x2;
 		GPIO_PORTF_IM_R &= ~0x10; //disarm interrupt on PF4
 		OS_AddThread(&DebounceTaskPF4,128,1);
+		//PE1 ^= 0x2;
 	}else if((GPIO_PORTF_RIS_R&0x01)&&(GPIO_PORTF_MIS_R&0x01)){//PF0
 		if(LastPF0 == 0){//rise edge
 			(*PF0Task)();
@@ -436,7 +487,7 @@ void OS_Kill(void){
 	//killpt->blocked = 0;
 	//killpt->priority = 7;
 	//killpt->sleep = 0;
-	valid[killpt->id] = 0;
+	tcbs[killpt->id].valid = 0;
 	killpt->id = -1;
 	OS_Suspend();
 	EndCritical(status);
@@ -454,7 +505,7 @@ void OS_Kill(void){
 //    e.g., 4 to 64 elements
 //    e.g., must be a power of 2,4,8,16,32,64,128
 void OS_Fifo_Init(unsigned long size){
-	//OS_InitSemaphore(&RoomLeft, FIFOSIZE);
+	OS_InitSemaphore(&DataRoomLeft, FIFOSIZE);
 	OS_InitSemaphore(&mutex,1);
 	OS_InitSemaphore(&DataAvailable,0);
 	PutPt = GetPt = &Fifo[0];
@@ -470,15 +521,23 @@ void OS_Fifo_Init(unsigned long size){
 //  this function can not disable or enable interrupts
 int OS_Fifo_Put(unsigned long data){
 	long volatile *nextPutPt;//from book 
+	//OS_Wait (&DataRoomLeft);
+	//OS_Wait (&mutex);
 	nextPutPt = PutPt + 1;
+	//printf("1:%d\r\n",&Fifo[FIFOSIZE]);
+	//printf("[1]:%d\r\n",nextPutPt);
+	//printf("[2]:%d\r\n",PutPt);
 	if(nextPutPt == &Fifo[FIFOSIZE]){
 		nextPutPt = &Fifo[0];
 	}
 	if(nextPutPt == GetPt){
+		//printf("f");
 		return 0;//fail
 	}else{
+		//printf("s");
 		*(PutPt) = data;
 		PutPt = nextPutPt;
+		//OS_Signal(&mutex);
 		OS_Signal(&DataAvailable);
 		return 1;//success
 	}
@@ -558,6 +617,7 @@ unsigned long OS_MailBox_Recv(void){
 //   this function and OS_TimeDifference have the same resolution and precision 
 unsigned long OS_Time(void){
 	return TIMER1_TAV_R;
+	//return TIMER1_TAV_R + timer1_count*40000;//NVIC_ST_CURRENT_R;//TIMER2_TAR_R;//
 }
 
 // ******** OS_TimeDifference ************
@@ -569,9 +629,10 @@ unsigned long OS_Time(void){
 //   this function and OS_Time have the same resolution and precision 
 unsigned long OS_TimeDifference(unsigned long start, unsigned long stop){
 	if(stop > start)
-		return stop - start;
+		return stop - start + TIME_500US;
 	else
-		return start + (0xFFFFFFFF - stop);
+		return start + (TIME_500US - stop);
+	//return stop - start;
 }
 
 // ******** OS_ClearMsTime ************
@@ -581,6 +642,7 @@ unsigned long OS_TimeDifference(unsigned long start, unsigned long stop){
 // You are free to change how this works
 void OS_ClearMsTime(void){
 	TIMER1_TAV_R = 0;
+	timer_value_ms = 0;
 }
 
 
@@ -591,7 +653,7 @@ void OS_ClearMsTime(void){
 // You are free to select the time resolution for this function
 // It is ok to make the resolution to match the first call to OS_AddPeriodicThread
 unsigned long OS_MsTime(void){
-	return TIMER1_TAV_R*global_period/80000;
-	//return timer_value;
+	//return TIMER1_TAV_R*global_period/80000;
+	return timer_value_ms;
 }
 

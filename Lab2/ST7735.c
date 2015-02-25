@@ -53,6 +53,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "ST7735.h"
+#include "os.h"
 #include "inc/tm4c123gh6pm.h"
 
 // 16 rows (0 to 15) and 21 characters (0 to 20)
@@ -452,6 +453,9 @@ static enum initRFlags TabColor;
 static int16_t _width = ST7735_TFTWIDTH;   // this could probably be a constant, except it is used in Adafruit_GFX and depends on image rotation
 static int16_t _height = ST7735_TFTHEIGHT;
 
+extern Sema4Type LCDdisplay;
+long StartCritical (void);    // previous I bit, disable interrupts
+void EndCritical(long sr);    // restore I bit to previous value
 
 // The Data/Command pin must be valid when the eighth bit is
 // sent.  The SSI module has hardware input and output FIFOs
@@ -755,6 +759,7 @@ void ST7735_InitR(enum initRFlags option) {
   ST7735_SetCursor(0,0);
   StTextColor = ST7735_YELLOW;
   ST7735_FillScreen(0);                 // set screen to black
+	//OS_InitSemaphore(&LCDdisplay, 1);
 }
 
 
@@ -1039,18 +1044,24 @@ void ST7735_DrawCharS(int16_t x, int16_t y, uint8_t c, int16_t textColor, int16_
 //       value      number to display
 //Output: none
 
+
+char values[12];
 void ST7735_Message (int device, int line, char * string, long value){
-	int x = 0;
-	char values[12];
-  int i = 0;
+	int i = 0;
 	int j = 0;
+	int x = 0;
+	//long sr = StartCritical();
+ OS_bWait(&LCDdisplay);	
 	ST7735_FillRect(0, line*10+device*80, 128, 10, ST7735_WHITE);//clear 
 	//String
 	while(*string){
 		ST7735_DrawChar(x*6, line*10+device*80, *string, ST7735_BLACK, ST7735_WHITE, 1);
 	  x++;
 		string++;
-		if(x>20) return;
+		if(x>20) {
+			OS_bSignal(&LCDdisplay);
+			return;
+		}
 	}
 	//Value
 	values[0] = value%10 + '0';
@@ -1064,8 +1075,13 @@ void ST7735_Message (int device, int line, char * string, long value){
 	for (j=i-1;j>=0;j--){
 		ST7735_DrawChar(x*6, line*10+device*80, values[j], ST7735_BLACK, ST7735_WHITE, 1);
 		x++;
-		if(x>20) return;
+		if(x>20) {
+			OS_bSignal(&LCDdisplay);
+			return;
+		}
 	}
+	OS_bSignal(&LCDdisplay);
+	//EndCritical(sr);
 }
 
 
@@ -1085,6 +1101,7 @@ void ST7735_Message (int device, int line, char * string, long value){
 void ST7735_DrawChar(int16_t x, int16_t y, uint8_t c, int16_t textColor, int16_t bgColor, uint8_t size){
   uint8_t line; // horizontal row of pixels of character
   int32_t col, row, i, j;// loop indices
+	//OS_bWait(&LCDdisplay);
   if(((x + 5*size - 1) >= _width)  || // Clip right
      ((y + 8*size - 1) >= _height) || // Clip bottom
      ((x + 5*size - 1) < 0)        || // Clip left
@@ -1119,6 +1136,7 @@ void ST7735_DrawChar(int16_t x, int16_t y, uint8_t c, int16_t textColor, int16_t
     }
     line = line<<1;   // move up to the next row
   }
+	//OS_bSignal(&LCDdisplay);
 }
 
 //------------ST7735_DrawString------------

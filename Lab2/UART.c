@@ -75,10 +75,14 @@ AddIndexFifo(Tx, FIFOSIZE, char, FIFOSUCCESS, FIFOFAIL)
 // Initialize UART0
 // Baud rate is 115200 bits/sec
 void UART_Init(void){
+	volatile unsigned long delay;
   SYSCTL_RCGCUART_R |= 0x01;            // activate UART0
   SYSCTL_RCGCGPIO_R |= 0x01;            // activate port A
+	delay = SYSCTL_RCGCGPIO_R;
   RxFifo_Init();                        // initialize empty FIFOs
   TxFifo_Init();
+	/*----  ----*/
+	/*-----  ---*/
   UART0_CTL_R &= ~UART_CTL_UARTEN;      // disable UART
   //UART0_IBRD_R = 27;                    // IBRD = int(50,000,000 / (16 * 115,200)) = int(27.1267)
   //UART0_FBRD_R = 8;                     // FBRD = int(0.1267 * 64 + 0.5) = 8

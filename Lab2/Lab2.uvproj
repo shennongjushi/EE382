@@ -490,6 +490,16 @@
               <FileType>1</FileType>
               <FilePath>.\lab2.c</FilePath>
             </File>
+            <File>
+              <FileName>ADC_SW.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ADC_SW.c</FilePath>
+            </File>
+            <File>
+              <FileName>ADC_SW.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\ADC_SW.h</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

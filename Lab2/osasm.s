@@ -51,7 +51,10 @@ SysTick_Handler                ; 1) Saves R0-R3,R12,LR,PC,PSR
     LDR     R0, =RunPt         ; 4) R0=pointer to RunPt, old thread
     LDR     R1, [R0]           ;    R1 = RunPt
     STR     SP, [R1]           ; 5) Save SP into TCB
-    LDR     R1, [R1,#4]        ; 6) R1 = RunPt->next
+sleep LDR     R1, [R1,#4]        ; 6) R1 = RunPt->next
+	LDR		R2, [R1, #8]	   ; sleep
+	CMP		R2, #0
+	BNE		sleep
     STR     R1, [R0]           ;    RunPt = R1
     LDR     SP, [R1]           ; 7) new thread SP; SP = RunPt->sp;
     POP     {R4-R11}           ; 8) restore regs r4-11
