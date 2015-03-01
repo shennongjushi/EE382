@@ -3,7 +3,7 @@
 <title>Static Call Graph - [.\Lab2.axf]</title></head>
 <body><HR>
 <H1>Static Call Graph for image .\Lab2.axf</H1><HR>
-<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5.03 [Build 76]: Last Updated: Sat Feb 28 15:16:45 2015
+<BR><P>#&#060CALLGRAPH&#062# ARM Linker, 5.03 [Build 76]: Last Updated: Sun Mar 01 16:47:21 2015
 <BR><P>
 <H3>Maximum Stack Usage =        136 bytes + Unknown(Functions without stacksize, Cycles, Untraceable Function Pointers)</H3><H3>
 Call chain for Maximum Stack Depth:</H3>
@@ -829,8 +829,8 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;OS_AddThread
 </UL>
 
-<P><STRONG><a name="[a2]"></a>OS_AddThread</STRONG> (Thumb, 366 bytes, Stack size 24 bytes, os.o(.text))
-<BR><BR>[Stack]<UL><LI>Max Depth = 24 + Unknown Stack Size
+<P><STRONG><a name="[a2]"></a>OS_AddThread</STRONG> (Thumb, 404 bytes, Stack size 32 bytes, os.o(.text))
+<BR><BR>[Stack]<UL><LI>Max Depth = 32 + Unknown Stack Size
 <LI>Call Chain = OS_AddThread
 </UL>
 <BR>[Calls]<UL><LI><a href="#[9a]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;StartCritical
@@ -1000,8 +1000,8 @@ Global Symbols
 <BR><BR>[Called By]<UL><LI><a href="#[104]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;main0
 </UL>
 
-<P><STRONG><a name="[2b]"></a>GPIOPortF_Handler</STRONG> (Thumb, 202 bytes, Stack size 8 bytes, os.o(.text))
-<BR><BR>[Stack]<UL><LI>Max Depth = 32 + Unknown Stack Size
+<P><STRONG><a name="[2b]"></a>GPIOPortF_Handler</STRONG> (Thumb, 200 bytes, Stack size 8 bytes, os.o(.text))
+<BR><BR>[Stack]<UL><LI>Max Depth = 40 + Unknown Stack Size
 <LI>Call Chain = GPIOPortF_Handler &rArr; OS_AddThread
 </UL>
 <BR>[Calls]<UL><LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;OS_AddThread
@@ -1580,7 +1580,7 @@ Global Symbols
 <BR>[Address Reference Count : 1]<UL><LI> lab2.o(.text)
 </UL>
 <P><STRONG><a name="[f7]"></a>SW1Push</STRONG> (Thumb, 40 bytes, Stack size 8 bytes, lab2.o(.text))
-<BR><BR>[Stack]<UL><LI>Max Depth = 32 + Unknown Stack Size
+<BR><BR>[Stack]<UL><LI>Max Depth = 40 + Unknown Stack Size
 <LI>Call Chain = SW1Push &rArr; OS_AddThread
 </UL>
 <BR>[Calls]<UL><LI><a href="#[f8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;OS_MsTime
@@ -1590,7 +1590,7 @@ Global Symbols
 <BR>[Address Reference Count : 1]<UL><LI> lab2.o(.text)
 </UL>
 <P><STRONG><a name="[fa]"></a>SW2Push</STRONG> (Thumb, 40 bytes, Stack size 8 bytes, lab2.o(.text))
-<BR><BR>[Stack]<UL><LI>Max Depth = 32 + Unknown Stack Size
+<BR><BR>[Stack]<UL><LI>Max Depth = 40 + Unknown Stack Size
 <LI>Call Chain = SW2Push &rArr; OS_AddThread
 </UL>
 <BR>[Calls]<UL><LI><a href="#[f8]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;OS_MsTime
@@ -1718,7 +1718,7 @@ Global Symbols
 <BR>[Address Reference Count : 1]<UL><LI> lab2.o(.text)
 </UL>
 <P><STRONG><a name="[114]"></a>Thread2c</STRONG> (Thumb, 378 bytes, Stack size 0 bytes, lab2.o(.text))
-<BR><BR>[Stack]<UL><LI>Max Depth = 24 + Unknown Stack Size
+<BR><BR>[Stack]<UL><LI>Max Depth = 32 + Unknown Stack Size
 <LI>Call Chain = Thread2c &rArr; OS_AddThread
 </UL>
 <BR>[Calls]<UL><LI><a href="#[a6]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;OS_Wait
@@ -1742,7 +1742,7 @@ Global Symbols
 <BR>[Address Reference Count : 1]<UL><LI> lab2.o(.text)
 </UL>
 <P><STRONG><a name="[116]"></a>BackgroundThread5c</STRONG> (Thumb, 44 bytes, Stack size 8 bytes, lab2.o(.text))
-<BR><BR>[Stack]<UL><LI>Max Depth = 32 + Unknown Stack Size
+<BR><BR>[Stack]<UL><LI>Max Depth = 40 + Unknown Stack Size
 <LI>Call Chain = BackgroundThread5c &rArr; OS_AddThread
 </UL>
 <BR>[Calls]<UL><LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;OS_AddThread
@@ -1789,7 +1789,7 @@ Global Symbols
 <BR>[Address Reference Count : 1]<UL><LI> lab2.o(.text)
 </UL>
 <P><STRONG><a name="[11c]"></a>BackgroundThread5d</STRONG> (Thumb, 44 bytes, Stack size 8 bytes, lab2.o(.text))
-<BR><BR>[Stack]<UL><LI>Max Depth = 32 + Unknown Stack Size
+<BR><BR>[Stack]<UL><LI>Max Depth = 40 + Unknown Stack Size
 <LI>Call Chain = BackgroundThread5d &rArr; OS_AddThread
 </UL>
 <BR>[Calls]<UL><LI><a href="#[a2]">&gt;&gt;</a>&nbsp;&nbsp;&nbsp;OS_AddThread

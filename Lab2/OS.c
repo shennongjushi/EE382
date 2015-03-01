@@ -176,6 +176,8 @@ void SetInitialStack(int i){
 // In Lab 3, you can ignore the stackSize fields
 int OS_AddThread(void(*task)(void), unsigned long stackSize, unsigned long priority)
 { int32_t status;
+	tcbType *curr;
+	tcbType *prev;
   status = StartCritical();
 	for(j = 0; j < NUMTHREADS; j++){//find the position for the new task
 		if(tcbs[j].valid == 0){
@@ -185,7 +187,7 @@ int OS_AddThread(void(*task)(void), unsigned long stackSize, unsigned long prior
 	}
 	if(j == NUMTHREADS) return 0;// if there is no space available, return
 	
-	tcbs[j].BlockPt = 0;
+	tcbs[j].BlockPt = NULL;
 	tcbs[j].id = j;
 	tcbs[j].sleep = 0;
 	tcbs[j].priority = priority;
@@ -201,9 +203,31 @@ int OS_AddThread(void(*task)(void), unsigned long stackSize, unsigned long prior
 		tail = &tcbs[j];
 		tail->next = tail;
 	}else{
-		tcbs[j].next = tail->next;
+		// Lab2
+		/* tcbs[j].next = tail->next;
 		tail->next = &tcbs[j];
 		tail = &tcbs[j];
+		*/
+		
+		// Lab 3
+		curr = tail;
+		prev = tail;
+		while(priority > curr->priority) {
+			prev = curr;
+			curr = curr->next;
+			if(curr == NULL) {
+				break;
+			}
+		}
+		
+		if(prev==curr){
+			tcbs[j].next = tail;
+			tail = &tcbs[j];
+		}
+		else {
+			tcbs[j].next = curr;
+			prev->next = &tcbs[j];
+		}
 	}
   SetInitialStack(j); 
 	Stacks[j][STACKSIZE-2] = (int32_t)(task);
