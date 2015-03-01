@@ -39,7 +39,7 @@ struct tcb{
 	int id;	 // a unique identifier for the thread, used for debugging
 	unsigned int valid; //used to indicate if it's valid or not
 	unsigned int priority;  //used in Lab3
-	unsigned int blocked;   //used in Lab3
+	Sema4Type* BlockPt;   //used in Lab3
 };
 typedef struct tcb tcbType;
 tcbType tcbs[NUMTHREADS];
@@ -185,7 +185,7 @@ int OS_AddThread(void(*task)(void), unsigned long stackSize, unsigned long prior
 	}
 	if(j == NUMTHREADS) return 0;// if there is no space available, return
 	
-	tcbs[j].blocked = 0;
+	tcbs[j].BlockPt = 0;
 	tcbs[j].id = j;
 	tcbs[j].sleep = 0;
 	tcbs[j].priority = priority;
@@ -253,26 +253,59 @@ void OS_InitSemaphore(Sema4Type *semaPt, long value){
 // input:  pointer to a counting semaphore
 // output: none
 void OS_Wait(Sema4Type *semaPt){
+		// Lab2
+		//OS_DisableInterrupts();
+	  //while(semaPt->Value <= 0){
+		//	OS_EnableInterrupts();
+		//	OS_DisableInterrupts();
+		//}
+		//(semaPt->Value)--;
+		//OS_EnableInterrupts();
+	
+		// Lab3
 		OS_DisableInterrupts();
-	  while(semaPt->Value <= 0){
-			OS_EnableInterrupts();
-			OS_DisableInterrupts();
-		}
 		(semaPt->Value)--;
+		while(semaPt->Value < 0) {
+			RunPt->BlockPt = semaPt;
+			OS_Suspend();		
+		}
 		OS_EnableInterrupts();	
 }
 
 // ******** OS_Signal ************
 // increment semaphore 
 // Lab2 spinlock
-// Lab3 wakeup blocked thread if appropriate 
+// Lab3 wakeup BlockPt thread if appropriate 
 // input:  pointer to a counting semaphore
 // output: none
 void OS_Signal(Sema4Type *semaPt){
+	// Lab2
+	//long status;
+	//status = StartCritical();
+	//semaPt->Value++;
+	//EndCritical(status);
+	
+	// Lab3
 	long status;
+	tcbType *current;
+	tcbType *toWakeUp;
 	status = StartCritical();
 	semaPt->Value++;
-	EndCritical(status);
+	
+	if(semaPt->Value <= 0) {
+		current = tail;
+		
+		while (current != NULL) {
+			if(current -> BlockPt == semaPt) {
+				toWakeUp = current;
+				break;
+			}
+			current = current -> next;
+		}
+		
+		toWakeUp -> BlockPt = 0;
+	}
+		EndCritical(status);
 }
 
 // ******** OS_bWait ************
@@ -280,26 +313,59 @@ void OS_Signal(Sema4Type *semaPt){
 // Lab3 block if less than zero
 // input:  pointer to a binary semaphore
 // output: none
-void OS_bWait(Sema4Type *semaPt){
-	OS_DisableInterrupts();
-	while(semaPt->Value == 0){
-		OS_EnableInterrupts();
+void OS_bWait(Sema4Type *semaPt) {
+	// Lab2
+	//OS_DisableInterrupts();
+	//while(semaPt->Value == 0){
+	//	OS_EnableInterrupts();
+	//	OS_DisableInterrupts();
+	//}
+	//(semaPt->Value) = 0;
+	//OS_EnableInterrupts();
+	
+			// Lab3
 		OS_DisableInterrupts();
-	}
-	(semaPt->Value) = 0;
-	OS_EnableInterrupts();
+		(semaPt->Value)--;
+		while(semaPt->Value < 0) {
+			RunPt->BlockPt = semaPt;
+			OS_Suspend();		
+		}
+		OS_EnableInterrupts();	
 }
 
 // ******** OS_bSignal ************
 // Lab2 spinlock, set to 1
-// Lab3 wakeup blocked thread if appropriate 
+// Lab3 wakeup BlockPt thread if appropriate 
 // input:  pointer to a binary semaphore
 // output: none
-void OS_bSignal(Sema4Type *semaPt){
+void OS_bSignal(Sema4Type *semaPt){	
+	// Lab2
+	//long status;
+	//status = StartCritical();
+	//semaPt->Value = 1;
+	//EndCritical(status);
+	
+	// Lab3
 	long status;
+	tcbType *current;
+	tcbType *toWakeUp;
 	status = StartCritical();
-	semaPt->Value = 1;
-	EndCritical(status);
+	semaPt->Value++;
+	
+	
+	if(semaPt->Value <= 0) {
+		current = tail;
+		
+		while (current != NULL) {
+			if(current->BlockPt == semaPt) {
+				toWakeUp = current;
+				break;
+			}
+			current = current -> next;
+		}
+		toWakeUp -> BlockPt = 0;
+	}
+		EndCritical(status);
 }
 
 //******** OS_Id *************** 
@@ -483,15 +549,11 @@ void OS_Kill(void){
 	}else{
 		prevpt->next = killpt->next;//delete the current one in the linkedlist
 	}
-	//killpt->sp = NULL;
-	//killpt->blocked = 0;
-	//killpt->priority = 7;
-	//killpt->sleep = 0;
+
 	tcbs[killpt->id].valid = 0;
 	killpt->id = -1;
 	OS_Suspend();
 	EndCritical(status);
-	//OS_EnableInterrupts();
 	
 }
 

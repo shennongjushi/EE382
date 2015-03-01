@@ -376,7 +376,7 @@ int main0(void){
 
 //*******attach background tasks***********
     OS_AddSW1Task(&SW1Push,2);
-    //OS_AddSW2Task(&SW2Push,2);  // add this line in Lab 3
+    OS_AddSW2Task(&SW2Push,2);  // add this line in Lab 3
     ADC_Init(4);  // sequencer 2, channel 4, PD3, sampling in DAS() 
     OS_AddPeriodicThread(&DAS,PERIOD,1); // 2 kHz real time sampling of PD3
 	  //OS_MsTime();
@@ -413,7 +413,6 @@ void Thread1(void){
 	
   Count1 = 0;          
   for(;;){
-		//printf("1\r\n");
     PE1 ^= 0x02;       // heartbeat
     Count1++;
     OS_Suspend();      // cooperative multitasking
@@ -423,7 +422,6 @@ void Thread2(void){
 	
   Count2 = 0;          
   for(;;){
-		//printf("22\r\n");
     PE2 ^= 0x04;       // heartbeat
     Count2++;
     OS_Suspend();      // cooperative multitasking
@@ -433,7 +431,6 @@ void Thread3(void){
 	
   Count3 = 0;          
   for(;;){
-		//printf("333\r\n");
     PE3 ^= 0x08;       // heartbeat
     Count3++;
     OS_Suspend();      // cooperative multitasking
@@ -681,6 +678,8 @@ void Thread6(void){  // foreground thread
   }
 }
 extern void Jitter(void){
+	
+	
 }   // prints jitter information (write this)
 void Thread7(void){  // foreground thread
   UART_OutString("\n\rEE345M/EE380L, Lab 3 Preparation 2\n\r");
