@@ -678,7 +678,16 @@ void Thread6(void){  // foreground thread
   }
 }
 extern void Jitter(void){
-	
+	UART_OutString("MaxJitter1:");
+	UART_OutUDec(maxJitter(1));
+	UART_OutString("Histogram1:");
+	UART_OutUDec(jitterHistogram(maxJitter(1), 1));
+	UART_OutString("MaxJitter2:");
+	UART_OutUDec(maxJitter(1));
+	UART_OutString("Histogram2:");
+	UART_OutUDec(jitterHistogram(maxJitter(1), 1));
+	OutCRLF();
+	return;
 	
 }   // prints jitter information (write this)
 void Thread7(void){  // foreground thread
