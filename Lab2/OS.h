@@ -259,4 +259,15 @@ unsigned long OS_MsTime(void);
 // It is ok to limit the range of theTimeSlice to match the 24-bit SysTick
 void OS_Launch(unsigned long theTimeSlice);
 
+//********** Jitter Function ***************
+void OS_JitterSetThisTime(char jitterNum);
+
+void OS_JitterSetLastTime(char jitterNum);
+
+long OS_JitterCalc(char jitterNum, unsigned int period);
+
+long OS_JitterHistogram(long jitter, char jitterNum);
+
+long OS_MaxJitter(char jitterNum);
+
 #endif

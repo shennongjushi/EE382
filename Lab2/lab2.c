@@ -49,10 +49,11 @@ long x[64],y[64];         // input and output arrays for FFT
 
 //---------------------User debugging-----------------------
 unsigned long DataLost;     // data sent by Producer, but not received by Consumer
-long MaxJitter;             // largest time jitter between interrupts in usec
+// Lab2
+/*long MaxJitter;             // largest time jitter between interrupts in usec
 #define JITTERSIZE 64
 unsigned long const JitterSize=JITTERSIZE;
-unsigned long JitterHistogram[JITTERSIZE]={0,};
+unsigned long JitterHistogram[JITTERSIZE]={0,}; */
 #define PE0  (*((volatile unsigned long *)0x40024004))
 #define PE1  (*((volatile unsigned long *)0x40024008))
 #define PE2  (*((volatile unsigned long *)0x40024010))
@@ -115,7 +116,8 @@ static unsigned long n=3;   // 3, 4, or 5
 // outputs: none
 unsigned long DASoutput;
 void DAS(void){ 
-unsigned long input;  
+// Lab2
+/*unsigned long input;  
 unsigned static long LastTime;  // time at previous ADC sample
 unsigned long thisTime;         // time at current ADC sample
 long jitter = 0;                    // time between measured and expected, in us
@@ -147,6 +149,23 @@ long jitter = 0;                    // time between measured and expected, in us
     LastTime = thisTime;
     PE0 ^= 0x01;
 		//GPIO_PORTF_DATA_R ^= 0x04; 
+		*/
+		unsigned long input;  
+		
+		if(NumSamples < RUNLENGTH){   // finite time run
+    PE0 ^= 0x01;
+	  input = ADC_In();           // channel set when calling ADC_Init
+    PE0 ^= 0x01;
+		OS_JitterSetThisTime(0);//thisTime = OS_Time();       // current time, 12.5 ns
+    DASoutput = Filter(input);
+    FilterWork++;        // calculation finished
+			
+    if(FilterWork>1){    // ignore timing of first interrupt
+			OS_JitterCalc(0, PERIOD);
+    }
+		
+    OS_JitterSetLastTime(0);//LastTime = thisTime;
+    PE0 ^= 0x01;
   }
 }
 //--------------end of Task 1-----------------------------
@@ -164,7 +183,7 @@ unsigned long myId = OS_Id();
   OS_Sleep(50);     // set this to sleep for 50msec
   ST7735_Message(1,1,"PIDWork     =",PIDWork);
   ST7735_Message(1,2,"DataLost    =",DataLost);
-  ST7735_Message(1,3,"Jitter 0.1us=",MaxJitter);
+	ST7735_Message(1,3,"Jitter 0.1us=",OS_MaxJitter(0));
   //PE1 ^= 0x02;
   OS_Kill();  // done, OS does not return from a Kill
 } 
@@ -334,10 +353,11 @@ void Interpreter(void){
 		if (strcmp(cmd,"1")==0){
 			printf("NumSamples:%d\r\n", NumSamples);
 			printf("NumCreated:%d\r\n", NumCreated);
-			printf("MaxJitter:%d\r\n",MaxJitter);
 			printf("DataLost:%d\r\n",DataLost);
 			printf("FilterWork:%d\r\n",FilterWork);
 			printf("PIDwork:%d\r\n",PIDWork);
+			printf("MaxJitter:%d\r\n",OS_MaxJitter(0));
+			printf("JitterHistogram:%d\r\n",OS_JitterHistogram(OS_MaxJitter(0), 0));
 		}
 		else if (strcmp(cmd,"2")==0){
 			for(it = 0; it < 6; it++)
@@ -365,7 +385,7 @@ int main0(void){
   UART_Init();
   DataLost = 0;        // lost data between producer and consumer
   NumSamples = 0;
-  MaxJitter = 0;       // in 1us units
+  //MaxJitter = 0;       // in 1us units
 
 //********initialize communication channels
   OS_MailBox_Init();
@@ -438,8 +458,8 @@ void Thread3(void){
 }
 
 //Testmain1
-//int main(void){
-int Testmain1(void){  // Testmain1
+int main(void){
+//int Testmain1(void){  // Testmain1
   OS_Init();          // initialize, disable interrupts
   PortE_Init();       // profile user threads
   NumCreated = 0 ;
@@ -677,16 +697,16 @@ void Thread6(void){  // foreground thread
     PE0 ^= 0x01;        // debugging toggle bit 0  
   }
 }
+
 extern void Jitter(void){
 	UART_OutString("MaxJitter1:");
-	UART_OutUDec(maxJitter(1));
+	UART_OutUDec(OS_MaxJitter(1));
 	UART_OutString("Histogram1:");
-	UART_OutUDec(jitterHistogram(maxJitter(1), 1));
+	UART_OutUDec(OS_JitterHistogram(OS_MaxJitter(1), 1));
 	UART_OutString("MaxJitter2:");
-	UART_OutUDec(maxJitter(1));
+	UART_OutUDec(OS_MaxJitter(1));
 	UART_OutString("Histogram2:");
-	UART_OutUDec(jitterHistogram(maxJitter(1), 1));
-	OutCRLF();
+	UART_OutUDec(OS_JitterHistogram(OS_MaxJitter(1), 1));
 	return;
 	
 }   // prints jitter information (write this)
@@ -699,20 +719,38 @@ void Thread7(void){  // foreground thread
 }
 #define workA 500       // {5,50,500 us} work in Task A
 #define counts1us 10    // number of OS_Time counts per 1us
+#define PERIODA 2.99*TIME_1MS
+unsigned long jitterCount1 = 0;
+unsigned long jitterCount2 = 0;
+
 void TaskA(void){       // called every {1000, 2990us} in background
   PE1 = 0x02;      // debugging profile  
+	OS_JitterSetThisTime(1);
+	if (jitterCount1>0){
+		jitterCount1++;
+		OS_JitterCalc(1,PERIODA);
+	}
+	
   CountA++;
   PseudoWork(workA*counts1us); //  do work (100ns time resolution)
+	OS_JitterSetLastTime(1);
   PE1 = 0x00;      // debugging profile  
 }
 #define workB 250       // 250 us work in Task B
 void TaskB(void){       // called every pB in background
   PE2 = 0x04;      // debugging profile  
+	OS_JitterSetThisTime(2);
+	if (jitterCount2>0) {
+		jitterCount2++;
+		OS_JitterCalc(2, PERIODA);
+	}
   CountB++;
   PseudoWork(workB*counts1us); //  do work (100ns time resolution)
-  PE2 = 0x00;      // debugging profile  
+  OS_JitterSetLastTime(2);
+	PE2 = 0x00;      // debugging profile  
 }
 
+//int main(void){
 int Testmain5(void){       // Testmain5 Lab 3
   PortE_Init();
   OS_Init();           // initialize, disable interrupts
@@ -800,6 +838,8 @@ static long result;
   result = m+n;
   return result;
 }
+
+//int main(void){
 int Testmain6(void){      // Testmain6  Lab 3
   volatile unsigned long delay;
   OS_Init();           // initialize, disable interrupts
@@ -842,8 +882,8 @@ void Thread8(void){       // only thread running
     PE1 ^= 0x02;      // debugging profile  
   }
 }
-int main(void){
-//int Testmain7(void){       // Testmain7
+//int main(void){
+int Testmain7(void){       // Testmain7
   PortE_Init();
   OS_Init();           // initialize, disable interrupts
   NumCreated = 0 ;

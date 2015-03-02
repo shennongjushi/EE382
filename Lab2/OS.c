@@ -14,6 +14,7 @@
 #define NVIC_INT_CTRL_R         (*((volatile uint32_t *)0xE000ED04))
 #define NVIC_INT_CTRL_PENDSTSET 0x04000000  // Set pending SysTick interrupt
 #define NVIC_SYS_PRI3_R         (*((volatile uint32_t *)0xE000ED20))  // Sys. Handlers 12 to 15 Priority
+	
 
 // function definitions in osasm.s
 void OS_DisableInterrupts(void); // Disable interrupts
@@ -27,6 +28,7 @@ void (*PeriodicTask)(void); // user function
 #define FIFOSIZE 4
 #define NUMTHREADS  10        // maximum number of threads
 #define STACKSIZE   100      // number of 32-bit words in stack
+
 long static Fifo[FIFOSIZE];
 long volatile *PutPt;
 long volatile *GetPt;
@@ -742,4 +744,50 @@ unsigned long OS_MsTime(void){
 	//return TIMER1_TAV_R*global_period/80000;
 	return timer_value_ms;
 }
+
+
+//********** Jitter Function ***************
+#define JITTERSIZE 64
+#define JITTERAMOUNT 4
+unsigned long JitterHistogram[JITTERAMOUNT][JITTERSIZE]={0,};
+long MaxJitter[JITTERAMOUNT];   
+unsigned static long lastTime[JITTERAMOUNT]; 
+unsigned long thisTime[JITTERAMOUNT];
+
+void OS_JitterSetThisTime(char jitterNum){
+	thisTime[jitterNum] = OS_Time();
+}
+
+
+void OS_JitterSetLastTime(char jitterNum){
+	lastTime[jitterNum] = thisTime[jitterNum];
+}
+
+long OS_JitterCalc(char jitterNum, unsigned int period){
+	long jitter; 
+	unsigned long diff = OS_TimeDifference(lastTime[jitterNum],thisTime[jitterNum]);
+	if(diff>period){
+		jitter = (diff-period+4)/8;  // in 0.1 usec
+	}else{
+		jitter = (period-diff+4)/8;  // in 0.1 usec
+	}
+	if(jitter > MaxJitter[jitterNum]){
+		MaxJitter[jitterNum] = jitter; // in usec
+	}       // jitter should be 0
+	if(jitter >= JITTERSIZE){
+		jitter = JITTERSIZE-1;
+	}
+	JitterHistogram[jitterNum][jitter]++; 
+	return jitter;
+}
+
+long OS_JitterHistogram(long jitter, char jitterNum) {
+	if (jitter < JITTERSIZE) return JitterHistogram[jitterNum][jitter];
+	else return JitterHistogram[jitterNum][JITTERSIZE-1];
+}
+
+long OS_MaxJitter(char jitterNum) {
+	return MaxJitter[jitterNum];
+}
+
 
