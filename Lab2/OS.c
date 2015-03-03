@@ -24,6 +24,7 @@ long StartCritical (void);    // previous I bit, disable interrupts
 void EndCritical(long sr);    // restore I bit to previous value
 void WaitForInterrupt(void);  // low power mode
 void (*PeriodicTask)(void); // user function
+void (*PeriodicTask2)(void); // user function2
 
 #define FIFOSIZE 4
 #define NUMTHREADS  10        // maximum number of threads
@@ -41,13 +42,14 @@ struct tcb{
 	int id;	 // a unique identifier for the thread, used for debugging
 	unsigned int valid; //used to indicate if it's valid or not
 	unsigned int priority;  //used in Lab3
+	signed int tmpPriority; //used in Lab3
 	Sema4Type* BlockPt;   //used in Lab3
 };
 typedef struct tcb tcbType;
 tcbType tcbs[NUMTHREADS];
 //char valid[NUMTHREADS];
 tcbType *RunPt;
-//tcbType *head = NULL;
+tcbType *NextRun;
 tcbType *tail = NULL;
 int32_t Stacks[NUMTHREADS][STACKSIZE];
 int j;
@@ -56,16 +58,14 @@ Sema4Type DataValid, BoxFree;
 unsigned long MailBox;
 unsigned long timer_value_ms;
 unsigned long timer1_count = 0;
+unsigned long timer3_count = 0;
 //unsigned int thread_number;
 
 
 int OS_AddPeriodicThread(void(*task)(void), unsigned long period, unsigned long priority) {
 	long sr;
   sr = StartCritical(); 
-	if(flag == 0){
-		global_period = period;
-		flag = 1;
-	}
+	
   SYSCTL_RCGCTIMER_R |= 0x02;   // 0) activate TIMER1
   PeriodicTask = task;          // user function
   TIMER1_CTL_R = 0x00000000;    // 1) disable TIMER1A during setup
@@ -76,7 +76,7 @@ int OS_AddPeriodicThread(void(*task)(void), unsigned long period, unsigned long 
   TIMER1_ICR_R = 0x00000001;    // 5) clear TIMER1A timeout flag
   TIMER1_IMR_R = 0x00000001;    // 6) arm timeout interrupt
 	
-	NVIC_PRI5_R = (NVIC_PRI4_R&0xFFFF00FF)|(priority<<13); // 7) priority
+	NVIC_PRI5_R = (NVIC_PRI5_R&0xFFFF00FF)|(priority<<13); // 7) priority
 // interrupts enabled in the main program after all devices initialized
 // vector number 35, interrupt number 21
   NVIC_EN0_R = 1 << 21;           // 8) enable IRQ 21 in NVIC
@@ -92,6 +92,35 @@ void Timer1A_Handler(void) {
 	(*PeriodicTask)(); 					// execute user function
 }
 
+
+int OS_AddPeriodicThread2(void(*task)(void), unsigned long period, unsigned long priority) {
+	long sr;
+  sr = StartCritical(); 
+
+  SYSCTL_RCGCTIMER_R |= 0x08;   // 0) activate TIMER3
+  PeriodicTask2 = task;          // user function
+  TIMER3_CTL_R = 0x00000000;    // 1) disable TIMER3A during setup
+  TIMER3_CFG_R = 0x00000000;    // 2) configure for 32-bit mode
+  TIMER3_TAMR_R = 0x00000002;   // 3) configure for periodic mode, default down-count settings
+  TIMER3_TAILR_R = period - 1;    // 4) reload value
+  TIMER3_ICR_R = 0x00000001;    // 5) clear TIMER1A timeout flag
+  TIMER3_IMR_R = 0x00000001;    // 6) arm timeout interrupt
+	
+	NVIC_PRI8_R = (NVIC_PRI8_R&0x1FFFFFFF)|(priority<<29); // 7) priority
+// interrupts enabled in the main program after all devices initialized
+// vector number 35, interrupt number 21
+  NVIC_EN1_R |= 8;     // 8) enable interrupt 35 in NVIC
+	
+  TIMER3_CTL_R = 0x00000001;    // 9) enable TIMER3A
+  EndCritical(sr);
+	return 1;
+}
+
+void Timer3A_Handler(void) {
+	timer3_count++;
+	TIMER3_ICR_R = 0x00000001;	// clear TIMER3A timeout flag
+	(*PeriodicTask2)(); 					// execute user function
+}
 
 // ******** Timer 2A ***********
 void Timer2A_Init(void){
@@ -193,6 +222,7 @@ int OS_AddThread(void(*task)(void), unsigned long stackSize, unsigned long prior
 	tcbs[j].id = j;
 	tcbs[j].sleep = 0;
 	tcbs[j].priority = priority;
+	tcbs[j].tmpPriority = priority;
 	//thread_number++;
 	/*if(head == NULL){
 		head = &tcbs[j];
@@ -214,7 +244,7 @@ int OS_AddThread(void(*task)(void), unsigned long stackSize, unsigned long prior
 		// Lab 3
 		curr = tail;
 		prev = tail;
-		while(priority > curr->priority) {
+		while(priority > (unsigned long)curr->priority) {
 			prev = curr;
 			curr = curr->next;
 			if(curr == NULL) {
@@ -236,6 +266,35 @@ int OS_AddThread(void(*task)(void), unsigned long stackSize, unsigned long prior
   EndCritical(status);
   return 1;               // successful
 }
+
+
+//******** OS_Scheduler ***************
+// find next thread to run,
+// this is a priority scheduler.
+// input:  none
+// output: none
+void OS_Scheduler(void) {
+	tcbType *curr;
+	signed long minPriority;
+	
+	curr = tail;
+	minPriority = 10;
+	
+	while (curr != NULL) {
+		(curr->tmpPriority)--;
+		
+		if (curr->tmpPriority < minPriority && curr->sleep == 0 && curr->BlockPt == NULL) {
+			minPriority = curr->tmpPriority;
+			NextRun = curr;
+		}
+		curr = curr->next;
+	}
+	
+	NextRun->tmpPriority = NextRun->priority;
+	return;
+}
+
+
 
 //******** OS_Launch *************** 
 // start the scheduler, enable interrupts
