@@ -247,7 +247,7 @@ int OS_AddThread(void(*task)(void), unsigned long stackSize, unsigned long prior
 		while(priority > (unsigned long)curr->priority) {
 			prev = curr;
 			curr = curr->next;
-			if(curr == NULL) {
+			if(curr == tail) {
 				break;
 			}
 		}
