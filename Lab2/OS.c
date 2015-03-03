@@ -50,6 +50,7 @@ tcbType tcbs[NUMTHREADS];
 //char valid[NUMTHREADS];
 tcbType *RunPt;
 tcbType *NextRun;
+tcbType *head = NULL;
 tcbType *tail = NULL;
 int32_t Stacks[NUMTHREADS][STACKSIZE];
 int j;
@@ -209,6 +210,7 @@ int OS_AddThread(void(*task)(void), unsigned long stackSize, unsigned long prior
 { int32_t status;
 	tcbType *curr;
 	tcbType *prev;
+	tcbType *track;
   status = StartCritical();
 	for(j = 0; j < NUMTHREADS; j++){//find the position for the new task
 		if(tcbs[j].valid == 0){
@@ -223,43 +225,50 @@ int OS_AddThread(void(*task)(void), unsigned long stackSize, unsigned long prior
 	tcbs[j].sleep = 0;
 	tcbs[j].priority = priority;
 	tcbs[j].tmpPriority = priority;
-	//thread_number++;
-	/*if(head == NULL){
+	
+	if(head == NULL){ // first thread to be added
 		head = &tcbs[j];
 		head->next = head;
-	}else{
-		tcbs[j].next = head->next;
-		head->next = &tcbs[j];
-	}*/
-	if(tail == NULL){
-		tail = &tcbs[j];
-		tail->next = tail;
-	}else{
-		// Lab2
-		/* tcbs[j].next = tail->next;
-		tail->next = &tcbs[j];
-		tail = &tcbs[j];
-		*/
-		
+	}else{ // insert thread according to priority
 		// Lab 3
-		curr = tail;
-		prev = tail;
-		while(priority > (unsigned long)curr->priority) {
-			prev = curr;
-			curr = curr->next;
-			if(curr == tail) {
-				break;
+		curr = head;
+		prev = head;
+		track = head;
+		
+		if(curr->next == head) {	// only one exisiting thread
+			if(priority > (unsigned long)curr->priority) { // new thread has lower prioriy
+				tcbs[j].next = curr;
+				prev->next = &tcbs[j];
+			}
+			else {	// new thread has higher prioriy
+				tcbs[j].next = head;
+				head = &tcbs[j];
+				curr->next = head;
 			}
 		}
-		
-		if(prev==curr){
-			tcbs[j].next = tail;
-			tail = &tcbs[j];
-		}
 		else {
-			tcbs[j].next = curr;
-			prev->next = &tcbs[j];
-		}
+			while(priority > (unsigned long)curr->priority) {
+				prev = curr;
+				curr = curr->next;
+				if(curr == head) {
+					break;
+				}
+			}
+			if(prev==curr){	// new thread has the highest priority
+				// find the last thred
+				while(track->next != head) {
+					track = track->next;
+				}
+
+				tcbs[j].next = head;
+				head = &tcbs[j];
+				track->next = head;
+			}
+			else {
+				tcbs[j].next = curr;
+				prev->next = &tcbs[j];
+			}
+		}	
 	}
   SetInitialStack(j); 
 	Stacks[j][STACKSIZE-2] = (int32_t)(task);
@@ -372,20 +381,27 @@ void OS_Signal(Sema4Type *semaPt){
 	
 	// Lab3
 	long status;
-	tcbType *current;
+	tcbType *curr;
 	tcbType *toWakeUp;
 	status = StartCritical();
 	semaPt->Value++;
 	
 	if(semaPt->Value <= 0) {
-		current = tail;
+		curr = head;
+		toWakeUp = NULL;
 		
-		while (current != NULL) {
-			if(current -> BlockPt == semaPt) {
-				toWakeUp = current;
-				break;
+		if(curr->BlockPt == semaPt) {
+			toWakeUp = curr;
+		}
+		else {
+			curr = curr->next;
+			while (curr != head) {
+				if(curr -> BlockPt == semaPt) {
+					toWakeUp = curr;
+					break;
+				}
+				curr = curr -> next;
 			}
-			current = current -> next;
 		}
 		
 		toWakeUp -> BlockPt = 0;
@@ -432,22 +448,29 @@ void OS_bSignal(Sema4Type *semaPt){
 	
 	// Lab3
 	long status;
-	tcbType *current;
+	tcbType *curr;
 	tcbType *toWakeUp;
 	status = StartCritical();
 	semaPt->Value++;
 	
-	
 	if(semaPt->Value <= 0) {
-		current = tail;
+		curr = head;
+		toWakeUp = NULL;
 		
-		while (current != NULL) {
-			if(current->BlockPt == semaPt) {
-				toWakeUp = current;
-				break;
-			}
-			current = current -> next;
+		if(curr->BlockPt == semaPt) {
+			toWakeUp = curr;
 		}
+		else {
+			curr = curr->next;
+			while (curr != head) {
+				if(curr -> BlockPt == semaPt) {
+					toWakeUp = curr;
+					break;
+				}
+				curr = curr -> next;
+			}
+		}
+		
 		toWakeUp -> BlockPt = 0;
 	}
 		EndCritical(status);
@@ -617,23 +640,19 @@ void OS_Kill(void){
 	long status;
 
 	status = StartCritical();
-	//OS_DisableInterrupts();
 	killpt = RunPt;
-	prevpt = tail;
-  //RunPt = RunPt->next;//RunPt now points to the next thread
-	while(prevpt->next != killpt){
-		prevpt = prevpt->next;
-	}//find the thread which is before the current one
-	if(killpt == tail){
-		if(tail->next == tail){//only one thread
-			tail = NULL;
-		}else{
-			prevpt->next = killpt->next;
-			tail = prevpt;
-		}
-	}else{
-		prevpt->next = killpt->next;//delete the current one in the linkedlist
+	prevpt = head;
+  
+	
+	if(prevpt == killpt) {
+		head = killpt->next;
 	}
+	else {
+		while(prevpt->next != killpt){
+			prevpt = prevpt->next;
+		}//find the thread which is before the current one
+	}
+	prevpt->next = killpt->next;//delete the current one in the linkedlist
 
 	tcbs[killpt->id].valid = 0;
 	killpt->id = -1;
