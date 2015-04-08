@@ -1,0 +1,17 @@
+--cpu Cortex-M4
+".\startup.o"
+".\edisk.o"
+".\pll.o"
+".\lab5.o"
+".\adc.o"
+".\adc_sw.o"
+".\os.o"
+".\retarget.o"
+".\st7735.o"
+".\uart.o"
+".\efile.o"
+".\osasm.o"
+".\cr4_fft_64_stm32.o"
+--ro-base 0x00000000 --entry 0x00000000 --rw-base 0x20000000 --entry Reset_Handler --first __Vectors --strict --summary_stderr --info summarysizes --map --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list ".\SDC.map" -o .\SDC.axf

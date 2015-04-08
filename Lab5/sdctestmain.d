@@ -1,0 +1,1 @@
+.\sdctestmain.o: SDCTestMain.c

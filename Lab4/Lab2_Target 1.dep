@@ -1,0 +1,65 @@
+Dependencies for Project 'Lab2', Target 'Target 1': (DO NOT MODIFY !)
+F (.\ADC.c)(0x551647F3)(-c --cpu Cortex-M3 -D__EVAL -g -O0 --apcs=interwork -I..\Lab3_new_new -I..\driverlib -I..\inc -I..\..\RTOS-I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\Luminary-o .\adc.o --omf_browse .\adc.crf --depend .\adc.d)
+I (C:\Keil\ARM\ARMCC\include\stdint.h)(0x51C8A654)
+I (inc/tm4c123gh6pm.h)(0x550F8ADA)
+I (ADC.h)(0x550F8ADA)
+I (UART.h)(0x550F8ADA)
+I (C:\Keil\ARM\ARMCC\include\stdio.h)(0x51C8A654)
+F (.\OS.c)(0x551730CC)(-c --cpu Cortex-M3 -D__EVAL -g -O0 --apcs=interwork -I..\Lab3_new_new -I..\driverlib -I..\inc -I..\..\RTOS-I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\Luminary-o .\os.o --omf_browse .\os.crf --depend .\os.d)
+I (inc/tm4c123gh6pm.h)(0x550F8ADA)
+I (C:\Keil\ARM\ARMCC\include\stdint.h)(0x51C8A654)
+I (OS.h)(0x550F8ADA)
+I (UART.h)(0x550F8ADA)
+I (C:\Keil\ARM\ARMCC\include\stdio.h)(0x51C8A654)
+I (FIFO.h)(0x550F8ADA)
+I (PLL.h)(0x550F8ADA)
+I (ST7735.h)(0x5515D4AA)
+F (.\PLL.c)(0x550F8ADA)(-c --cpu Cortex-M3 -D__EVAL -g -O0 --apcs=interwork -I..\Lab3_new_new -I..\driverlib -I..\inc -I..\..\RTOS-I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\Luminary-o .\pll.o --omf_browse .\pll.crf --depend .\pll.d)
+I (PLL.h)(0x550F8ADA)
+I (C:\Keil\ARM\ARMCC\include\stdint.h)(0x51C8A654)
+I (inc/tm4c123gh6pm.h)(0x550F8ADA)
+F (.\Retarget.c)(0x550F8ADA)(-c --cpu Cortex-M3 -D__EVAL -g -O0 --apcs=interwork -I..\Lab3_new_new -I..\driverlib -I..\inc -I..\..\RTOS-I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\Luminary-o .\retarget.o --omf_browse .\retarget.crf --depend .\retarget.d)
+I (C:\Keil\ARM\ARMCC\include\stdio.h)(0x51C8A654)
+I (C:\Keil\ARM\ARMCC\include\rt_misc.h)(0x51C8A654)
+I (inc/tm4c123gh6pm.h)(0x550F8ADA)
+I (C:\Keil\ARM\ARMCC\include\stdint.h)(0x51C8A654)
+I (UART.h)(0x550F8ADA)
+F (.\ST7735.c)(0x5515D553)(-c --cpu Cortex-M3 -D__EVAL -g -O0 --apcs=interwork -I..\Lab3_new_new -I..\driverlib -I..\inc -I..\..\RTOS-I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\Luminary-o .\st7735.o --omf_browse .\st7735.crf --depend .\st7735.d)
+I (C:\Keil\ARM\ARMCC\include\stdio.h)(0x51C8A654)
+I (C:\Keil\ARM\ARMCC\include\stdint.h)(0x51C8A654)
+I (ST7735.h)(0x5515D4AA)
+I (os.h)(0x550F8ADA)
+I (inc/tm4c123gh6pm.h)(0x550F8ADA)
+F (.\UART.c)(0x55172E2C)(-c --cpu Cortex-M3 -D__EVAL -g -O0 --apcs=interwork -I..\Lab3_new_new -I..\driverlib -I..\inc -I..\..\RTOS-I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\Luminary-o .\uart.o --omf_browse .\uart.crf --depend .\uart.d)
+I (C:\Keil\ARM\ARMCC\include\stdint.h)(0x51C8A654)
+I (C:\Keil\ARM\ARMCC\include\stdio.h)(0x51C8A654)
+I (inc/tm4c123gh6pm.h)(0x550F8ADA)
+I (FIFO.h)(0x550F8ADA)
+I (UART.h)(0x550F8ADA)
+I (OS.h)(0x550F8ADA)
+F (.\ADC.h)(0x550F8ADA)()
+F (.\FIFO.h)(0x550F8ADA)()
+F (.\OS.h)(0x550F8ADA)()
+F (.\PLL.h)(0x550F8ADA)()
+F (.\ST7735.h)(0x5515D4AA)()
+F (.\UART.h)(0x550F8ADA)()
+F (.\startup.s)(0x550F8ADA)(--cpu Cortex-M3 --pd "__EVAL SETA 1" -g --apcs=interwork -I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\Luminary--list .\startup.lst --xref -o .\startup.o --depend .\startup.d)
+F (.\cr4_fft_64_stm32.s)(0x550F8ADA)(--cpu Cortex-M3 --pd "__EVAL SETA 1" -g --apcs=interwork -I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\Luminary--list .\cr4_fft_64_stm32.lst --xref -o .\cr4_fft_64_stm32.o --depend .\cr4_fft_64_stm32.d)
+F (.\osasm.s)(0x550F8ADA)(--cpu Cortex-M3 --pd "__EVAL SETA 1" -g --apcs=interwork -I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\Luminary--list .\osasm.lst --xref -o .\osasm.o --depend .\osasm.d)
+F (.\PID_stm32.s)(0x550F8ADA)(--cpu Cortex-M3 --pd "__EVAL SETA 1" -g --apcs=interwork -I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\Luminary--list .\pid_stm32.lst --xref -o .\pid_stm32.o --depend .\pid_stm32.d)
+F (.\lab2.c)(0x55173133)(-c --cpu Cortex-M3 -D__EVAL -g -O0 --apcs=interwork -I..\Lab3_new_new -I..\driverlib -I..\inc -I..\..\RTOS-I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\Luminary-o .\lab2.o --omf_browse .\lab2.crf --depend .\lab2.d)
+I (OS.h)(0x550F8ADA)
+I (inc/tm4c123gh6pm.h)(0x550F8ADA)
+I (C:\Keil\ARM\ARMCC\include\stdint.h)(0x51C8A654)
+I (ST7735.h)(0x5515D4AA)
+I (ADC.h)(0x550F8ADA)
+I (ADC_SW.h)(0x550F8ADA)
+I (UART.h)(0x550F8ADA)
+I (C:\Keil\ARM\ARMCC\include\stdio.h)(0x51C8A654)
+I (PLL.h)(0x550F8ADA)
+I (C:\Keil\ARM\ARMCC\include\string.h)(0x51C8A654)
+F (.\ADC_SW.c)(0x550F8ADA)(-c --cpu Cortex-M3 -D__EVAL -g -O0 --apcs=interwork -I..\Lab3_new_new -I..\driverlib -I..\inc -I..\..\RTOS-I C:\Keil\ARM\RV31\INC-I C:\Keil\ARM\CMSIS\Include-I C:\Keil\ARM\Inc\Luminary-o .\adc_sw.o --omf_browse .\adc_sw.crf --depend .\adc_sw.d)
+I (C:\Keil\ARM\ARMCC\include\stdint.h)(0x51C8A654)
+I (ADC_SW.h)(0x550F8ADA)
+I (inc/tm4c123gh6pm.h)(0x550F8ADA)
+F (.\ADC_SW.h)(0x550F8ADA)()

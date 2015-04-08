@@ -1,0 +1,13 @@
+.\lab5.o: lab5.c
+.\lab5.o: C:\Keil\ARM\ARMCC\bin\..\include\stdio.h
+.\lab5.o: C:\Keil\ARM\ARMCC\bin\..\include\string.h
+.\lab5.o: inc/hw_types.h
+.\lab5.o: OS.h
+.\lab5.o: inc/tm4c123gh6pm.h
+.\lab5.o: C:\Keil\ARM\ARMCC\bin\..\include\stdint.h
+.\lab5.o: edisk.h
+.\lab5.o: efile.h
+.\lab5.o: ADC.h
+.\lab5.o: ADC_SW.h
+.\lab5.o: UART.h
+.\lab5.o: PLL.h
